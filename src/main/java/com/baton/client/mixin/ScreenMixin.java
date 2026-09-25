@@ -43,7 +43,7 @@ public abstract class ScreenMixin {
 	@Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
 	private void baton$background(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
 		if (minecraft.level == null) {
-			graphics.fill(0, 0, width, height, Ui.BACKGROUND);
+			Ui.background(graphics, width, height, 1.0F);
 			ci.cancel();
 		}
 	}
@@ -60,7 +60,7 @@ public abstract class ScreenMixin {
 	private void baton$bubbleOut(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
 		graphics.pose().popMatrix();
 		if (baton$animated() && minecraft.level == null) {
-			graphics.fill(0, 0, width, height, Ui.fade(Ui.BACKGROUND, 1.0F - Bubble.appear(baton$openedAt)));
+			Ui.background(graphics, width, height, 1.0F - Bubble.appear(baton$openedAt));
 		}
 	}
 

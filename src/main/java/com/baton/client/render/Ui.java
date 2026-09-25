@@ -7,6 +7,7 @@ import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.joml.Matrix3x2f;
@@ -15,8 +16,7 @@ public final class Ui {
 	public static final String MOD_ID = "baton";
 	public static final float HEADING_SIZE = 12.0F;
 	public static final int HEADING = 0xFFECEEF3;
-	public static final int BACKGROUND = 0xFF0B0C0F;
-	public static final int PANEL = 0xFF121318;
+	public static final int PANEL = 0xD8111217;
 	public static final int EDGE = 0x12FFFFFF;
 	public static final int HOVER = 0x08FFFFFF;
 	public static final int SELECTED = 0x10FFFFFF;
@@ -29,9 +29,12 @@ public final class Ui {
 	public static final int DANGER = 0xFFFF8A94;
 	public static final int DANGER_FILL = 0x14FF5A64;
 	public static final int DANGER_HOVER = 0x24FF5A64;
-	private static final int CONTROL = 0xFF17181D;
-	private static final int CONTROL_HOVER = 0xFF1E2026;
-	private static final int CONTROL_DISABLED = 0xFF131418;
+	private static final int CONTROL = 0xE017181D;
+	private static final int CONTROL_HOVER = 0xE8202227;
+	private static final int CONTROL_DISABLED = 0xB8131418;
+	private static final Identifier BACKGROUND = id("textures/gui/background.png");
+	private static final int BACKGROUND_WIDTH = 1280;
+	private static final int BACKGROUND_HEIGHT = 720;
 	private static final RenderPipeline SHAPE = pipeline("shape")
 		.withVertexShader(id("core/shape"))
 		.withFragmentShader(id("core/shape"))
@@ -62,6 +65,19 @@ public final class Ui {
 		float radius = Math.min(height / 2.0F, 7.0F);
 		rect(graphics, x, y, width, height, radius, fade(!active ? CONTROL_DISABLED : hovered ? CONTROL_HOVER : CONTROL, alpha));
 		outline(graphics, x, y, width, height, radius, 0.5F, fade(EDGE, alpha));
+	}
+
+	public static void background(GuiGraphics graphics, int width, int height, float alpha) {
+		if (alpha <= 0.0F) {
+			return;
+		}
+		float scale = Math.max((float) width / BACKGROUND_WIDTH, (float) height / BACKGROUND_HEIGHT);
+		int regionWidth = Math.round(width / scale);
+		int regionHeight = Math.round(height / scale);
+		graphics.blit(
+			RenderPipelines.GUI_TEXTURED, BACKGROUND, 0, 0, (BACKGROUND_WIDTH - regionWidth) / 2.0F, (BACKGROUND_HEIGHT - regionHeight) / 2.0F,
+			width, height, regionWidth, regionHeight, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, ARGB.white(alpha)
+		);
 	}
 
 	public static float approach(float value, float target, float speed, float delta) {

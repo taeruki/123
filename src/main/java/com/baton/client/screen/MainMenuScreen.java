@@ -15,13 +15,13 @@ public final class MainMenuScreen extends BatonScreen {
 	private static final Identifier LOGO = Ui.id("textures/gui/logo.png");
 	private static final int LOGO_TEXTURE = 288;
 	private static final int LOGO_SIZE = 72;
-	private static final int MENU_WIDTH = 80;
-	private static final int ROW = 26;
+	private static final int MENU_WIDTH = 86;
+	private static final int ROW = 30;
 	private static final int INSET = 3;
 	private static final int GAP = 8;
-	private static final int EXIT_WIDTH = 58;
-	private static final int EXIT_HEIGHT = 20;
-	private static final int KNOB = 16;
+	private static final int EXIT_WIDTH = 68;
+	private static final int EXIT_HEIGHT = 22;
+	private static final int KNOB = 18;
 	private static final float QUIT_THRESHOLD = 0.97F;
 	private static final float LABEL = 8.5F;
 	private static final int UNDERLINE = 0xB3FFFFFF;
@@ -87,7 +87,7 @@ public final class MainMenuScreen extends BatonScreen {
 		Ui.rect(graphics, exitX + 2, exitY + 2, knobX - exitX - 2 + KNOB, KNOB, KNOB / 2.0F, Ui.fade(TRAIL, appear));
 		float armed = Mth.clamp((knob - 0.75F) / (QUIT_THRESHOLD - 0.75F), 0.0F, 1.0F);
 		Ui.rect(graphics, knobX, exitY + 2, KNOB, KNOB, KNOB / 2.0F, Ui.fade(ARGB.srgbLerp(armed, Ui.ACCENT, KNOB_ARMED), appear));
-		UiFont.drawCentered(graphics, "→", knobX + KNOB / 2.0F, exitY + radius, 8.0F, Ui.fade(Ui.ON_ACCENT, appear));
+		UiFont.drawCentered(graphics, "→", knobX + KNOB / 2.0F, exitY + radius, 9.0F, Ui.fade(Ui.ON_ACCENT, appear));
 	}
 
 	@Override

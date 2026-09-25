@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -32,7 +33,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PauseScreen.class)
 public abstract class PauseScreenMixin extends Screen {
 	private static final int WIDE = 204;
-	private static final int TOP_PADDING = 50;
+	private static final int HEADING_HEIGHT = 12;
+	private static final int HEADING_GAP = 14;
+
+	@Shadow
+	@Final
+	private boolean showPauseMenu;
 
 	@Shadow
 	@Final
@@ -62,6 +68,9 @@ public abstract class PauseScreenMixin extends Screen {
 	@Nullable
 	private Button disconnectButton;
 
+	@Unique
+	private int baton$headingY;
+
 	private PauseScreenMixin(Component title) {
 		super(title);
 	}
@@ -78,7 +87,7 @@ public abstract class PauseScreenMixin extends Screen {
 
 	@Redirect(method = "init", at = @At(value = "NEW", target = "(IIIILnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/Font;)Lnet/minecraft/client/gui/components/StringWidget;"))
 	private StringWidget baton$heading(int x, int y, int width, int height, Component title, Font font) {
-		return new HeadingWidget(x, y, width, height, title, font);
+		return new HeadingWidget(x, showPauseMenu ? baton$headingY : y, width, HEADING_HEIGHT, title, font);
 	}
 
 	@Inject(method = "createPauseMenu", at = @At("HEAD"), cancellable = true)
@@ -89,7 +98,7 @@ public abstract class PauseScreenMixin extends Screen {
 		rows.addChild(Button.builder(RETURN_TO_GAME, button -> {
 			minecraft.setScreen(null);
 			minecraft.mouseHandler.grabMouse();
-		}).width(WIDE).build(), 2, grid.newCellSettings().paddingTop(TOP_PADDING));
+		}).width(WIDE).build(), 2);
 		rows.addChild(openScreenButton(ADVANCEMENTS, () -> new AdvancementsScreen(minecraft.player.connection.getAdvancements(), this)));
 		rows.addChild(openScreenButton(STATS, () -> new StatsScreen(this, minecraft.player.getStats())));
 		getCustomAdditions().ifPresent(dialog -> rows.addChild(
@@ -110,7 +119,8 @@ public abstract class PauseScreenMixin extends Screen {
 			minecraft.getReportingContext().draftReportHandled(minecraft, this, () -> minecraft.disconnectFromWorld(ClientLevel.DEFAULT_QUIT_MESSAGE), true);
 		}).width(WIDE).build(), 2);
 		grid.arrangeElements();
-		FrameLayout.alignInRectangle(grid, 0, 0, width, height, 0.5F, 0.25F);
+		baton$headingY = (height - HEADING_GAP - grid.getHeight()) / 2;
+		FrameLayout.alignInRectangle(grid, 0, baton$headingY + HEADING_GAP, width, grid.getHeight(), 0.5F, 0.0F);
 		grid.visitWidgets(this::addRenderableWidget);
 		ci.cancel();
 	}
