@@ -34,18 +34,17 @@ public final class Profiles {
 
 	public static void load(Minecraft minecraft) {
 		file = minecraft.gameDirectory.toPath().resolve("baton").resolve("profiles.txt");
-		current = minecraft.getUser().getName();
+		List<String> lines = List.of();
 		try {
 			if (Files.exists(file)) {
-				Files.readAllLines(file).stream().filter(VALID.asMatchPredicate()).distinct().forEach(NAMES::add);
+				lines = Files.readAllLines(file);
 			}
 		} catch (IOException e) {
 			LOGGER.warn("Failed to read profiles from {}", file, e);
 		}
-		if (NAMES.isEmpty()) {
-			NAMES.add(current);
-		}
-		select(NAMES.removeFirst());
+		lines.stream().skip(1).filter(VALID.asMatchPredicate()).distinct().forEach(NAMES::add);
+		String saved = lines.isEmpty() ? "" : lines.getFirst();
+		select(valid(saved) ? saved : minecraft.getUser().getName());
 	}
 
 	public static List<String> names() {
@@ -112,9 +111,9 @@ public final class Profiles {
 	}
 
 	private static void save() {
-		List<String> lines = new ArrayList<>(NAMES.size());
+		List<String> lines = new ArrayList<>(NAMES.size() + 1);
 		lines.add(current);
-		NAMES.stream().filter(name -> !name.equals(current)).forEach(lines::add);
+		lines.addAll(NAMES);
 		try {
 			Files.createDirectories(file.getParent());
 			Files.write(file, lines);

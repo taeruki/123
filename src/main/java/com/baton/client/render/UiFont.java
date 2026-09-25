@@ -42,7 +42,7 @@ public final class UiFont {
 	private static final byte ON_EDGE = (byte) 128;
 	private static final float DISTANCE_SCALE = 128.0F / PADDING;
 	private static final int ATLAS_WIDTH = 1024;
-	private static final char[] RANGES = {' ', '~', '\u00A0', '\u00FF', '\u0400', '\u045F', '\u2013', '\u2026', '\u2190', '\u2193'};
+	private static final char[] RANGES = {' ', '~', '\u00A0', '\u00FF', '\u0400', '\u045F', '\u2013', '\u2026', '\u2190', '\u2193', '\u2713', '\u2713'};
 	private static final RenderPipeline PIPELINE = Ui.pipeline("text")
 		.withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color"))
 		.withFragmentShader(Ui.id("core/text"))

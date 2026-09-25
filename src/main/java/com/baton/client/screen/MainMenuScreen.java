@@ -17,25 +17,23 @@ public final class MainMenuScreen extends BatonScreen {
 	private static final Identifier LOGO = Ui.id("textures/gui/logo.png");
 	private static final int LOGO_TEXTURE = 288;
 	private static final int LOGO_SIZE = 72;
-	private static final int MENU_WIDTH = 88;
-	private static final int ROW = 22;
+	private static final int MENU_WIDTH = 80;
+	private static final int ROW = 26;
 	private static final int INSET = 3;
 	private static final int GAP = 8;
-	private static final int EXIT_WIDTH = 84;
-	private static final int EXIT_HEIGHT = 20;
-	private static final int KNOB = 16;
-	private static final float LABEL = 7.5F;
-	private static final float SMALL = 7.0F;
-	private static final int PANEL = 0x08FFFFFF;
-	private static final int EDGE = 0x14FFFFFF;
-	private static final int HIGHLIGHT = 0x10FFFFFF;
-	private static final int ACCENT = 0xFF9ED0FF;
-	private static final int TEXT = 0xFF8C98AB;
-	private static final int TEXT_ACTIVE = 0xFFF2F6FC;
-	private static final int MUTED = 0xFF6B788C;
-	private static final int TRAIL = 0xFF1A2537;
-	private static final int KNOB_COLOR = 0xFFE6F2FF;
-	private static final int KNOB_ICON = 0xFF0B1220;
+	private static final int EXIT_WIDTH = 46;
+	private static final int EXIT_HEIGHT = 16;
+	private static final int KNOB = 12;
+	private static final float QUIT_THRESHOLD = 0.97F;
+	private static final float LABEL = 8.5F;
+	private static final int HIGHLIGHT = 0x0FFFFFFF;
+	private static final int UNDERLINE = 0xB3FFFFFF;
+	private static final int TEXT = 0xFF979DAA;
+	private static final int TEXT_ACTIVE = 0xFFF4F5F8;
+	private static final int TRAIL = 0x14FFFFFF;
+	private static final int KNOB_COLOR = 0xFFE9ECF2;
+	private static final int KNOB_ARMED = 0xFFFF7A85;
+	private static final int KNOB_ICON = 0xFF0C0E13;
 
 	private final Entry[] entries = {
 		new Entry("Одиночная", () -> minecraft.setScreen(new SelectWorldScreen(this))),
@@ -81,24 +79,22 @@ public final class MainMenuScreen extends BatonScreen {
 		int tint = ARGB.colorFromFloat(appear, appear, appear, appear);
 		graphics.blit(RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA, LOGO, (width - LOGO_SIZE) / 2, logoY, 0, 0, LOGO_SIZE, LOGO_SIZE, LOGO_TEXTURE, LOGO_TEXTURE, LOGO_TEXTURE, LOGO_TEXTURE, tint);
 
-		Ui.rect(graphics, menuX, menuY, MENU_WIDTH, menuHeight(), 9.0F, Ui.fade(PANEL, appear));
-		Ui.outline(graphics, menuX, menuY, MENU_WIDTH, menuHeight(), 9.0F, 0.5F, Ui.fade(EDGE, appear));
+		Ui.glass(graphics, menuX, menuY, MENU_WIDTH, menuHeight(), 11.0F, appear);
 		float highlight = appear * highlightAlpha;
-		Ui.rect(graphics, menuX + INSET, highlightY, MENU_WIDTH - INSET * 2, ROW, 7.0F, Ui.fade(HIGHLIGHT, highlight));
-		Ui.rect(graphics, width / 2.0F - 4.0F, highlightY + ROW - 3.5F, 8.0F, 1.0F, 0.5F, Ui.fade(ACCENT, highlight));
+		Ui.rect(graphics, menuX + INSET, highlightY, MENU_WIDTH - INSET * 2, ROW, 8.0F, Ui.fade(HIGHLIGHT, highlight));
+		Ui.rect(graphics, width / 2.0F - 4.0F, highlightY + ROW - 3.0F, 8.0F, 1.0F, 0.5F, Ui.fade(UNDERLINE, highlight));
 		for (int i = 0; i < entries.length; i++) {
 			float focus = highlightAlpha * Mth.clamp(1.0F - Math.abs(highlightY - rowY(i)) / ROW, 0.0F, 1.0F);
 			UiFont.drawCentered(graphics, entries[i].label, width / 2.0F, rowY(i) + ROW / 2.0F, LABEL, Ui.fade(ARGB.srgbLerp(focus, TEXT, TEXT_ACTIVE), appear));
 		}
 
 		float radius = EXIT_HEIGHT / 2.0F;
-		Ui.rect(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, radius, Ui.fade(PANEL, appear));
-		Ui.outline(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, radius, 0.5F, Ui.fade(EDGE, appear));
-		UiFont.drawCentered(graphics, "Выход", width / 2.0F, exitY + radius, SMALL, Ui.fade(MUTED, appear));
 		float knobX = knobX();
+		Ui.glass(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, radius, appear);
 		Ui.rect(graphics, exitX + 2, exitY + 2, knobX - exitX - 2 + KNOB, KNOB, KNOB / 2.0F, Ui.fade(TRAIL, appear));
-		Ui.rect(graphics, knobX, exitY + 2, KNOB, KNOB, KNOB / 2.0F, Ui.fade(KNOB_COLOR, appear));
-		UiFont.drawCentered(graphics, "→", knobX + KNOB / 2.0F, exitY + radius, SMALL, Ui.fade(KNOB_ICON, appear));
+		float armed = Mth.clamp((knob - 0.75F) / (QUIT_THRESHOLD - 0.75F), 0.0F, 1.0F);
+		Ui.rect(graphics, knobX, exitY + 2, KNOB, KNOB, KNOB / 2.0F, Ui.fade(ARGB.srgbLerp(armed, KNOB_COLOR, KNOB_ARMED), appear));
+		UiFont.drawCentered(graphics, "→", knobX + KNOB / 2.0F, exitY + radius, 6.0F, Ui.fade(KNOB_ICON, appear));
 	}
 
 	@Override
@@ -125,9 +121,6 @@ public final class MainMenuScreen extends BatonScreen {
 			return super.mouseDragged(event, dragX, dragY);
 		}
 		knob = Mth.clamp((float) ((event.x() - grab - exitX - 2) / travel()), 0.0F, 1.0F);
-		if (knob >= 1.0F) {
-			minecraft.stop();
-		}
 		return true;
 	}
 
@@ -137,7 +130,7 @@ public final class MainMenuScreen extends BatonScreen {
 			return super.mouseReleased(event);
 		}
 		dragging = false;
-		if (knob > 0.9F) {
+		if (knob >= QUIT_THRESHOLD) {
 			minecraft.stop();
 		}
 		return true;
@@ -174,7 +167,7 @@ public final class MainMenuScreen extends BatonScreen {
 	}
 
 	private boolean overKnob(double x, double y) {
-		return inside(x, y, knobX(), exitY + 2, KNOB, KNOB);
+		return inside(x, y, knobX() - 2, exitY, KNOB + 4, EXIT_HEIGHT);
 	}
 
 	private record Entry(String label, Runnable action) {

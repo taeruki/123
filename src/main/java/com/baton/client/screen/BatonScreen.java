@@ -10,7 +10,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
 
 public abstract class BatonScreen extends Screen {
-	private static final int BACKGROUND = 0xFF0A0E16;
 	private static final float INTRO_SECONDS = 0.45F;
 	private static final float INTRO_OFFSET = 8.0F;
 
@@ -26,7 +25,7 @@ public abstract class BatonScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-		Ui.snow(graphics, width, height, BACKGROUND);
+		Ui.snow(graphics, width, height);
 	}
 
 	@Override
