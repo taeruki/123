@@ -1,0 +1,71 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+base {
+	archivesName = 'baton'
+}
+
+repositories {
+	maven {
+		url = 'https://api.modrinth.com/maven'
+		content {
+			includeGroup 'maven.modrinth'
+		}
+	}
+}
+
+configurations {
+	runtimeMods {
+		transitive = false
+	}
+}
+
+loom {
+	accessWidenerPath = file('src/main/resources/baton.accesswidener')
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	include(implementation("io.netty:netty-handler-proxy:${project.netty_version}"))
+	include(implementation("io.netty:netty-codec-socks:${project.netty_version}"))
+
+	modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	runtimeMods "maven.modrinth:sodium:${project.sodium_version}"
+	runtimeMods "maven.modrinth:lithium:${project.lithium_version}"
+	runtimeMods "maven.modrinth:ferrite-core:${project.ferritecore_version}"
+	runtimeMods "maven.modrinth:immediatelyfast:${project.immediatelyfast_version}"
+	runtimeMods "maven.modrinth:entityculling:${project.entityculling_version}"
+}
+
+def syncRuntimeMods = tasks.register('syncRuntimeMods', Sync) {
+	from configurations.runtimeMods
+	into layout.projectDirectory.dir('run/mods')
+}
+
+tasks.named('runClient') {
+	dependsOn syncRuntimeMods
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+	it.options.compilerArgs += ['-Xlint:all', '-Werror']
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}

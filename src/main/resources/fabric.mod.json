@@ -1,0 +1,16 @@
+{
+	"schemaVersion": 1,
+	"id": "baton",
+	"version": "${version}",
+	"name": "Baton",
+	"environment": "client",
+	"accessWidener": "baton.accesswidener",
+	"mixins": [
+		"baton.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~1.21.11",
+		"java": ">=21"
+	}
+}

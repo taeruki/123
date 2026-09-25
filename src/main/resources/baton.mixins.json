@@ -1,0 +1,29 @@
+{
+	"required": true,
+	"package": "com.baton.client.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"AbstractButtonMixin",
+		"AbstractScrollAreaMixin",
+		"AbstractSelectionListMixin",
+		"AbstractSliderButtonMixin",
+		"AbstractStringWidgetMixin",
+		"CheckboxMixin",
+		"ClientPackSourceMixin",
+		"ConnectionMixin",
+		"EditBoxMixin",
+		"HeaderAndFooterLayoutMixin",
+		"MinecraftMixin",
+		"OptionsMixin",
+		"OptionsScreenMixin",
+		"PackSelectionModelMixin",
+		"PauseScreenMixin",
+		"RenderingTextCollectorMixin",
+		"ScreenMixin",
+		"TabButtonMixin",
+		"TabNavigationBarMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
