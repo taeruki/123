@@ -4,15 +4,12 @@
 	"version": "${version}",
 	"name": "Baton",
 	"environment": "client",
-	"entrypoints": {
-		"client": [
-			"com.baton.client.BatonClient"
-		]
-	},
+	"mixins": [
+		"baton.mixins.json"
+	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~1.21.1",
-		"java": ">=21",
-		"fabric-api": "*"
+		"java": ">=21"
 	}
 }

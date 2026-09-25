@@ -6,11 +6,43 @@ base {
 	archivesName = 'baton'
 }
 
+repositories {
+	maven {
+		url = 'https://api.modrinth.com/maven'
+		content {
+			includeGroup 'maven.modrinth'
+		}
+	}
+}
+
+configurations {
+	runtimeMods {
+		transitive = false
+	}
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	runtimeMods "maven.modrinth:sodium:${project.sodium_version}"
+	runtimeMods "maven.modrinth:lithium:${project.lithium_version}"
+	runtimeMods "maven.modrinth:ferrite-core:${project.ferritecore_version}"
+	runtimeMods "maven.modrinth:immediatelyfast:${project.immediatelyfast_version}"
+	runtimeMods "maven.modrinth:entityculling:${project.entityculling_version}"
+	runtimeMods "maven.modrinth:modernfix:${project.modernfix_version}"
+}
+
+def syncRuntimeMods = tasks.register('syncRuntimeMods', Sync) {
+	from configurations.runtimeMods
+	into layout.projectDirectory.dir('run/mods')
+}
+
+tasks.named('runClient') {
+	dependsOn syncRuntimeMods
 }
 
 processResources {
