@@ -2,6 +2,7 @@ package com.baton.client.screen;
 
 import com.baton.client.profile.Profiles;
 import com.baton.client.render.Ui;
+import com.baton.client.render.UiFont;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import java.util.ArrayList;
@@ -14,63 +15,43 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.PlayerSkin;
 
 public final class ProfilesScreen extends BatonScreen {
-	private static final int CARD_WIDTH = 188;
-	private static final int ROW = 20;
-	private static final int VISIBLE_ROWS = 7;
-	private static final int INSET = 4;
-	private static final int CONTROL = 20;
-	private static final int RANDOM_WIDTH = 62;
-	private static final int HEADER = 32;
-	private static final int CLEAR_WIDTH = 116;
-	private static final int CLEAR_HEIGHT = 18;
-	private static final int CLEAR_GAP = 8;
-	private static final int REMOVE_WIDTH = 18;
-	private static final float TITLE_SCALE = 1.5F;
+	private static final int WIDTH = 128;
+	private static final int PAD = 4;
+	private static final int HEADER = 30;
+	private static final int ROW = 16;
+	private static final int VISIBLE_ROWS = 6;
+	private static final int FIELD = 18;
+	private static final int ICON = 12;
+	private static final int REMOVE = 14;
+	private static final float NAME = 7.0F;
+	private static final float CAPTION = 5.5F;
 	private static final int PANEL = 0x08FFFFFF;
 	private static final int EDGE = 0x14FFFFFF;
-	private static final int HOVER = 0x08FFFFFF;
-	private static final int SELECTED = 0x10FFFFFF;
-	private static final int FIELD = 0x33000000;
-	private static final int BUTTON = 0x0CFFFFFF;
-	private static final int BUTTON_HOVER = 0x16FFFFFF;
+	private static final int HOVER = 0x0AFFFFFF;
+	private static final int FIELD_COLOR = 0x28000000;
+	private static final int ICON_HOVER = 0x14FFFFFF;
 	private static final int ACCENT = 0xFF9ED0FF;
-	private static final int TITLE = 0xFFDCEEFF;
 	private static final int TEXT = 0xFF8C98AB;
 	private static final int TEXT_ACTIVE = 0xFFF2F6FC;
 	private static final int MUTED = 0xFF5E6A7D;
-	private static final int CONFIRM = 0xFFE6F2FF;
-	private static final int CONFIRM_ICON = 0xFF0B1220;
 	private static final int DANGER = 0xFFFF8A94;
-	private static final int DANGER_BUTTON = 0x10FF5A64;
-	private static final int DANGER_BUTTON_HOVER = 0x1CFF5A64;
 
 	private final Screen parent;
 	private final List<Row> rows = new ArrayList<>();
-	private final Component title = Ui.text("Профили");
-	private final Component hint = Ui.text("Никнейм");
-	private final Component currentTag = Ui.text("текущий");
-	private final Component removeIcon = Ui.text("×");
-	private final Component confirmIcon = Ui.text("✓");
-	private final Component randomLabel = Ui.text("Случайный");
-	private final Component clearLabel = Ui.text("Удалить все");
-	private Component subtitle = Component.empty();
-	private Component inputText = Component.empty();
+	private Row current = row(Profiles.current());
 	private String input = "";
-	private int cardX;
-	private int titleY;
-	private int cardY;
+	private int x;
+	private int y;
 	private int cardHeight;
 	private int listY;
 	private int listHeight;
 	private int fieldY;
-	private int clearY;
 	private float scroll;
 	private float scrollTarget;
 
@@ -87,79 +68,85 @@ public final class ProfilesScreen extends BatonScreen {
 	protected void renderContent(GuiGraphics graphics, int mouseX, int mouseY, float appear) {
 		scroll = Ui.approach(scroll, scrollTarget, 18.0F, delta);
 		int hoveredRow = hoveredRow(mouseX, mouseY);
-		boolean overConfirm = overConfirm(mouseX, mouseY);
 		boolean overRandom = overRandom(mouseX, mouseY);
+		boolean overAdd = overAdd(mouseX, mouseY) && Profiles.valid(input);
 		boolean overClear = overClear(mouseX, mouseY);
-		if (hoveredRow >= 0 || overConfirm && Profiles.valid(input) || overRandom || overClear) {
+		if (hoveredRow >= 0 || overRandom || overAdd || overClear) {
 			graphics.requestCursor(CursorTypes.POINTING_HAND);
 		}
 
-		graphics.pose().pushMatrix();
-		graphics.pose().translate(width / 2.0F, titleY);
-		graphics.pose().scale(TITLE_SCALE);
-		graphics.drawString(font, title, -font.width(title) / 2, 0, Ui.fade(TITLE, appear), false);
-		graphics.pose().popMatrix();
-		graphics.drawString(font, subtitle, (width - font.width(subtitle)) / 2, titleY + 17, Ui.fade(MUTED, appear), false);
+		UiFont.draw(graphics, "ПРОФИЛИ", x + 2, y - 7, CAPTION, Ui.fade(MUTED, appear));
+		String count = Integer.toString(rows.size() + 1);
+		UiFont.draw(graphics, count, x + WIDTH - 2 - UiFont.width(count, CAPTION), y - 7, CAPTION, Ui.fade(MUTED, appear));
 
-		Ui.rect(graphics, cardX, cardY, CARD_WIDTH, cardHeight, 10.0F, Ui.fade(PANEL, appear));
-		Ui.outline(graphics, cardX, cardY, CARD_WIDTH, cardHeight, 10.0F, 0.5F, Ui.fade(EDGE, appear));
+		Ui.rect(graphics, x, y, WIDTH, cardHeight, 9.0F, Ui.fade(PANEL, appear));
+		Ui.outline(graphics, x, y, WIDTH, cardHeight, 9.0F, 0.5F, Ui.fade(EDGE, appear));
 
-		int rowX = cardX + INSET;
-		int rowWidth = CARD_WIDTH - INSET * 2;
+		PlayerFaceRenderer.draw(graphics, current.skin, x + PAD + 4, y + 8, 14, ARGB.white(appear));
+		UiFont.draw(graphics, current.name, x + PAD + 24, y + 12, 7.5F, Ui.fade(TEXT_ACTIVE, appear));
+		Ui.rect(graphics, x + PAD + 24, y + 19.5F, 3.0F, 3.0F, 1.5F, Ui.fade(ACCENT, appear));
+		UiFont.draw(graphics, "в игре", x + PAD + 30, y + 21, CAPTION, Ui.fade(MUTED, appear));
+		Ui.rect(graphics, x + PAD, y + HEADER, WIDTH - PAD * 2, 0.5F, 0.0F, Ui.fade(EDGE, appear));
+
+		int rowX = x + PAD;
+		int rowWidth = WIDTH - PAD * 2;
 		Ui.clip(graphics, rowX, listY, rowX + rowWidth, listY + listHeight);
 		for (int i = 0; i < rows.size(); i++) {
-			int y = Math.round(listY + i * ROW - scroll);
-			if (y + ROW <= listY || y >= listY + listHeight) {
+			float rowY = listY + i * ROW - scroll;
+			if (rowY + ROW <= listY || rowY >= listY + listHeight) {
 				continue;
 			}
 			Row row = rows.get(i);
-			boolean selected = row.name.equals(Profiles.current());
-			if (selected || i == hoveredRow) {
-				Ui.rect(graphics, rowX, y, rowWidth, ROW, 6.0F, Ui.fade(selected ? SELECTED : HOVER, appear));
+			boolean hovered = i == hoveredRow;
+			if (hovered) {
+				Ui.rect(graphics, rowX, rowY, rowWidth, ROW, 6.0F, Ui.fade(HOVER, appear));
+				boolean overRemove = overRemove(mouseX);
+				UiFont.drawCentered(graphics, "×", rowX + rowWidth - REMOVE / 2.0F, rowY + ROW / 2.0F, 8.0F, Ui.fade(overRemove ? DANGER : MUTED, appear));
 			}
-			PlayerFaceRenderer.draw(graphics, row.skin, rowX + 4, y + 4, 12, ARGB.white(appear));
-			graphics.drawString(font, row.label, rowX + 22, y + 6, Ui.fade(selected ? TEXT_ACTIVE : TEXT, appear), false);
-			if (selected) {
-				graphics.drawString(font, currentTag, rowX + rowWidth - 7 - font.width(currentTag), y + 6, Ui.fade(ACCENT, appear), false);
-			} else if (i == hoveredRow) {
-				int color = overRemove(mouseX) ? DANGER : MUTED;
-				graphics.drawString(font, removeIcon, rowX + rowWidth - (REMOVE_WIDTH + font.width(removeIcon)) / 2, y + 6, Ui.fade(color, appear), false);
-			}
+			PlayerFaceRenderer.draw(graphics, row.skin, rowX + 4, Math.round(rowY) + 4, 8, ARGB.white(appear));
+			UiFont.draw(graphics, row.name, rowX + 17, rowY + ROW / 2.0F, NAME, Ui.fade(hovered ? TEXT_ACTIVE : TEXT, appear));
 		}
 		Ui.unclip(graphics);
 		float maxScroll = maxScroll();
 		if (maxScroll > 0.0F) {
 			float barHeight = listHeight * listHeight / (float) (rows.size() * ROW);
-			Ui.rect(graphics, cardX + CARD_WIDTH - 3.0F, listY + scroll / maxScroll * (listHeight - barHeight), 1.5F, barHeight, 0.75F, Ui.fade(EDGE, appear));
+			Ui.rect(graphics, x + WIDTH - 2.5F, listY + scroll / maxScroll * (listHeight - barHeight), 1.0F, barHeight, 0.5F, Ui.fade(EDGE, appear));
 		}
 
-		int fieldWidth = fieldWidth();
-		Ui.rect(graphics, rowX, fieldY, fieldWidth, CONTROL, 6.0F, Ui.fade(FIELD, appear));
-		Ui.outline(graphics, rowX, fieldY, fieldWidth, CONTROL, 6.0F, 0.5F, Ui.fade(EDGE, appear));
-		Ui.clip(graphics, rowX + 1, fieldY, rowX + fieldWidth - 1, fieldY + CONTROL);
-		int inputWidth = font.width(inputText);
-		int textX = rowX + 7 - Math.max(0, inputWidth - fieldWidth + 16);
+		Ui.rect(graphics, rowX, fieldY, rowWidth, FIELD, 6.0F, Ui.fade(FIELD_COLOR, appear));
+		int textRight = addX() - ICON - 4;
+		Ui.clip(graphics, rowX + 1, fieldY, textRight, fieldY + FIELD);
+		float inputWidth = UiFont.width(input, NAME);
+		float textX = rowX + 6 - Math.max(0.0F, inputWidth - (textRight - rowX - 10));
+		float centerY = fieldY + FIELD / 2.0F;
 		if (input.isEmpty()) {
-			graphics.drawString(font, hint, textX, fieldY + 6, Ui.fade(MUTED, appear), false);
+			UiFont.draw(graphics, "Новый ник", textX, centerY, NAME, Ui.fade(MUTED, appear));
 		} else {
-			graphics.drawString(font, inputText, textX, fieldY + 6, Ui.fade(TEXT_ACTIVE, appear), false);
+			UiFont.draw(graphics, input, textX, centerY, NAME, Ui.fade(TEXT_ACTIVE, appear));
 		}
 		if (Util.getMillis() / 500 % 2 == 0) {
-			Ui.rect(graphics, textX + inputWidth + 1, fieldY + 5, 0.5F, 10.0F, 0.0F, Ui.fade(TEXT_ACTIVE, appear));
+			Ui.rect(graphics, textX + inputWidth + 0.5F, centerY - 4.0F, 0.5F, 8.0F, 0.0F, Ui.fade(TEXT_ACTIVE, appear));
 		}
 		Ui.unclip(graphics);
 
+		int iconY = fieldY + (FIELD - ICON) / 2;
+		int randomX = addX() - ICON - 2;
+		if (overRandom) {
+			Ui.rect(graphics, randomX, iconY, ICON, ICON, 4.0F, Ui.fade(ICON_HOVER, appear));
+		}
+		int dice = Ui.fade(overRandom ? TEXT_ACTIVE : TEXT, appear);
+		Ui.outline(graphics, randomX + 2.5F, iconY + 2.5F, 7.0F, 7.0F, 2.0F, 0.75F, dice);
+		Ui.rect(graphics, randomX + 4.25F, iconY + 4.25F, 1.5F, 1.5F, 0.75F, dice);
+		Ui.rect(graphics, randomX + 6.25F, iconY + 6.25F, 1.5F, 1.5F, 0.75F, dice);
 		boolean valid = Profiles.valid(input);
-		int confirmX = rowX + fieldWidth + INSET;
-		Ui.rect(graphics, confirmX, fieldY, CONTROL, CONTROL, 6.0F, Ui.fade(valid ? CONFIRM : BUTTON, appear));
-		graphics.drawString(font, confirmIcon, confirmX + (CONTROL - font.width(confirmIcon)) / 2, fieldY + 6, Ui.fade(valid ? CONFIRM_ICON : MUTED, appear), false);
-		int randomX = confirmX + CONTROL + INSET;
-		Ui.rect(graphics, randomX, fieldY, RANDOM_WIDTH, CONTROL, 6.0F, Ui.fade(overRandom ? BUTTON_HOVER : BUTTON, appear));
-		graphics.drawString(font, randomLabel, randomX + (RANDOM_WIDTH - font.width(randomLabel)) / 2, fieldY + 6, Ui.fade(overRandom ? TEXT_ACTIVE : TEXT, appear), false);
+		Ui.rect(graphics, addX(), iconY, ICON, ICON, 4.0F, Ui.fade(valid ? ACCENT : ICON_HOVER, appear));
+		int plus = Ui.fade(valid ? 0xFF0B1220 : MUTED, appear);
+		Ui.rect(graphics, addX() + 3.0F, iconY + 5.5F, 6.0F, 1.0F, 0.5F, plus);
+		Ui.rect(graphics, addX() + 5.5F, iconY + 3.0F, 1.0F, 6.0F, 0.5F, plus);
 
-		int clearX = (width - CLEAR_WIDTH) / 2;
-		Ui.rect(graphics, clearX, clearY, CLEAR_WIDTH, CLEAR_HEIGHT, 6.0F, Ui.fade(overClear ? DANGER_BUTTON_HOVER : DANGER_BUTTON, appear));
-		graphics.drawString(font, clearLabel, clearX + (CLEAR_WIDTH - font.width(clearLabel)) / 2, clearY + 5, Ui.fade(DANGER, appear), false);
+		if (!rows.isEmpty()) {
+			UiFont.drawCentered(graphics, "Очистить список", width / 2.0F, clearY(), CAPTION + 0.5F, Ui.fade(overClear ? DANGER : MUTED, appear));
+		}
 	}
 
 	@Override
@@ -167,23 +154,22 @@ public final class ProfilesScreen extends BatonScreen {
 		if (event.button() != 0) {
 			return super.mouseClicked(event, doubleClick);
 		}
-		double x = event.x();
-		double y = event.y();
-		int row = hoveredRow(x, y);
+		double mouseX = event.x();
+		double mouseY = event.y();
+		int row = hoveredRow(mouseX, mouseY);
 		if (row >= 0) {
 			String name = rows.get(row).name;
-			if (overRemove(x) && !name.equals(Profiles.current())) {
+			if (overRemove(mouseX)) {
 				Profiles.remove(name);
 			} else {
 				Profiles.select(name);
 			}
-		} else if (overConfirm(x, y)) {
+		} else if (overRandom(mouseX, mouseY)) {
+			Profiles.select(Profiles.random());
+		} else if (overAdd(mouseX, mouseY)) {
 			confirm();
 			return true;
-		} else if (overRandom(x, y)) {
-			Profiles.select(Profiles.random());
-			scrollTarget = Float.MAX_VALUE;
-		} else if (overClear(x, y)) {
+		} else if (overClear(mouseX, mouseY)) {
 			Profiles.clear();
 		} else {
 			return super.mouseClicked(event, doubleClick);
@@ -202,7 +188,7 @@ public final class ProfilesScreen extends BatonScreen {
 	@Override
 	public boolean charTyped(CharacterEvent event) {
 		if (input.length() < Profiles.MAX_LENGTH && Profiles.allowed(event.codepoint())) {
-			setInput(input + event.codepointAsString());
+			input += event.codepointAsString();
 			return true;
 		}
 		return super.charTyped(event);
@@ -215,11 +201,11 @@ public final class ProfilesScreen extends BatonScreen {
 			return true;
 		}
 		if (event.key() == InputConstants.KEY_BACKSPACE && !input.isEmpty()) {
-			setInput(input.substring(0, input.length() - 1));
+			input = input.substring(0, input.length() - 1);
 			return true;
 		}
 		if (event.isPaste()) {
-			setInput(Profiles.sanitize(input + minecraft.keyboardHandler.getClipboard()));
+			input = Profiles.sanitize(input + minecraft.keyboardHandler.getClipboard());
 			return true;
 		}
 		return super.keyPressed(event);
@@ -234,32 +220,25 @@ public final class ProfilesScreen extends BatonScreen {
 		if (Profiles.valid(input)) {
 			click();
 			Profiles.select(input);
-			setInput("");
-			scrollTarget = Float.MAX_VALUE;
+			input = "";
 			refresh();
 		}
 	}
 
-	private void setInput(String value) {
-		input = value;
-		inputText = Ui.text(value);
-	}
-
 	private void refresh() {
+		current = row(Profiles.current());
 		rows.clear();
 		for (String name : Profiles.names()) {
-			rows.add(new Row(name, Ui.text(name), DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(name))));
+			if (!name.equals(current.name)) {
+				rows.add(row(name));
+			}
 		}
-		int count = rows.size();
-		subtitle = Ui.text(Profiles.current()).withColor(TEXT_ACTIVE).append(Ui.text("  ·  " + count + " " + plural(count)).withColor(MUTED));
-		listHeight = Math.min(count, VISIBLE_ROWS) * ROW;
-		cardHeight = INSET * 3 + listHeight + CONTROL;
-		cardX = (width - CARD_WIDTH) / 2;
-		titleY = (height - HEADER - cardHeight - CLEAR_GAP - CLEAR_HEIGHT) / 2;
-		cardY = titleY + HEADER;
-		listY = cardY + INSET;
-		fieldY = listY + listHeight + INSET;
-		clearY = cardY + cardHeight + CLEAR_GAP;
+		listHeight = Math.min(rows.size(), VISIBLE_ROWS) * ROW;
+		cardHeight = HEADER + PAD + listHeight + (rows.isEmpty() ? 0 : PAD) + FIELD + PAD;
+		x = (width - WIDTH) / 2;
+		y = (height - cardHeight) / 2;
+		listY = y + HEADER + PAD;
+		fieldY = listY + listHeight + (rows.isEmpty() ? 0 : PAD);
 		scrollTarget = Mth.clamp(scrollTarget, 0.0F, maxScroll());
 		scroll = Math.min(scroll, maxScroll());
 	}
@@ -268,43 +247,42 @@ public final class ProfilesScreen extends BatonScreen {
 		return Math.max(0, rows.size() * ROW - listHeight);
 	}
 
-	private int fieldWidth() {
-		return CARD_WIDTH - INSET * 4 - CONTROL - RANDOM_WIDTH;
+	private int addX() {
+		return x + WIDTH - PAD - ICON - 3;
 	}
 
-	private int hoveredRow(double x, double y) {
-		if (!inside(x, y, cardX + INSET, listY, CARD_WIDTH - INSET * 2, listHeight)) {
+	private float clearY() {
+		return y + cardHeight + 10.0F;
+	}
+
+	private int hoveredRow(double mouseX, double mouseY) {
+		if (!inside(mouseX, mouseY, x + PAD, listY, WIDTH - PAD * 2, listHeight)) {
 			return -1;
 		}
-		int index = (int) ((y - listY + scroll) / ROW);
+		int index = (int) ((mouseY - listY + scroll) / ROW);
 		return index < rows.size() ? index : -1;
 	}
 
-	private boolean overRemove(double x) {
-		return x >= cardX + CARD_WIDTH - INSET - REMOVE_WIDTH;
+	private boolean overRemove(double mouseX) {
+		return mouseX >= x + WIDTH - PAD - REMOVE;
 	}
 
-	private boolean overConfirm(double x, double y) {
-		return inside(x, y, cardX + INSET * 2 + fieldWidth(), fieldY, CONTROL, CONTROL);
+	private boolean overRandom(double mouseX, double mouseY) {
+		return inside(mouseX, mouseY, addX() - ICON - 2, fieldY + (FIELD - ICON) / 2.0F, ICON, ICON);
 	}
 
-	private boolean overRandom(double x, double y) {
-		return inside(x, y, cardX + INSET * 3 + fieldWidth() + CONTROL, fieldY, RANDOM_WIDTH, CONTROL);
+	private boolean overAdd(double mouseX, double mouseY) {
+		return inside(mouseX, mouseY, addX(), fieldY + (FIELD - ICON) / 2.0F, ICON, ICON);
 	}
 
-	private boolean overClear(double x, double y) {
-		return inside(x, y, (width - CLEAR_WIDTH) / 2.0F, clearY, CLEAR_WIDTH, CLEAR_HEIGHT);
+	private boolean overClear(double mouseX, double mouseY) {
+		return !rows.isEmpty() && inside(mouseX, mouseY, width / 2.0F - 36, clearY() - 5, 72, 10);
 	}
 
-	private static String plural(int count) {
-		int last = count % 10;
-		int lastTwo = count % 100;
-		if (last == 1 && lastTwo != 11) {
-			return "профиль";
-		}
-		return last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14) ? "профиля" : "профилей";
+	private static Row row(String name) {
+		return new Row(name, DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(name)));
 	}
 
-	private record Row(String name, Component label, PlayerSkin skin) {
+	private record Row(String name, PlayerSkin skin) {
 	}
 }

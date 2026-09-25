@@ -3,11 +3,12 @@
 	"package": "com.baton.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"FontTextureMixin",
+		"ClientPackSourceMixin",
 		"GuiGraphicsAccessor",
 		"MinecraftAccessor",
 		"MinecraftMixin",
-		"OptionsMixin"
+		"OptionsMixin",
+		"PackSelectionModelMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

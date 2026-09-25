@@ -1,6 +1,7 @@
 package com.baton.client.mixin;
 
 import com.baton.client.profile.Profiles;
+import com.baton.client.render.UiFont;
 import com.baton.client.screen.MainMenuScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,7 +25,8 @@ public abstract class MinecraftMixin {
 	public abstract void setScreen(@Nullable Screen screen);
 
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void baton$loadProfiles(GameConfig config, CallbackInfo ci) {
+	private void baton$load(GameConfig config, CallbackInfo ci) {
+		UiFont.load();
 		Profiles.load((Minecraft) (Object) this);
 	}
 

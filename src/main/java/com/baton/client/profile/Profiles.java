@@ -112,9 +112,9 @@ public final class Profiles {
 	}
 
 	private static void save() {
-		List<String> lines = new ArrayList<>(NAMES.size() + 1);
+		List<String> lines = new ArrayList<>(NAMES.size());
 		lines.add(current);
-		lines.addAll(NAMES);
+		NAMES.stream().filter(name -> !name.equals(current)).forEach(lines::add);
 		try {
 			Files.createDirectories(file.getParent());
 			Files.write(file, lines);

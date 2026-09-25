@@ -24,14 +24,14 @@ public record ShapeRenderState(
 ) implements GuiElementRenderState {
 	private static final float EDGE_PADDING = 1.0F;
 
-	static ShapeRenderState of(RenderPipeline pipeline, Matrix3x2fc pose, float x, float y, float width, float height, int color, int a, int b, @Nullable ScreenRectangle scissor) {
+	static ShapeRenderState of(RenderPipeline pipeline, Matrix3x2fc pose, float x, float y, float width, float height, int color, int a, int b) {
 		ScreenRectangle area = new ScreenRectangle(
 			Mth.floor(x - EDGE_PADDING),
 			Mth.floor(y - EDGE_PADDING),
 			Mth.ceil(width + EDGE_PADDING * 2) + 1,
 			Mth.ceil(height + EDGE_PADDING * 2) + 1
 		).transformMaxBounds(pose);
-		return new ShapeRenderState(pipeline, pose, x, y, width, height, color, a, b, scissor, scissor != null ? scissor.intersection(area) : area);
+		return new ShapeRenderState(pipeline, pose, x, y, width, height, color, a, b, Ui.scissor(), Ui.bounds(area));
 	}
 
 	@Override

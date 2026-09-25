@@ -1,6 +1,7 @@
 package com.baton.client.screen;
 
 import com.baton.client.render.Ui;
+import com.baton.client.render.UiFont;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
@@ -8,7 +9,6 @@ import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -16,14 +16,16 @@ import net.minecraft.util.Mth;
 public final class MainMenuScreen extends BatonScreen {
 	private static final Identifier LOGO = Ui.id("textures/gui/logo.png");
 	private static final int LOGO_TEXTURE = 288;
-	private static final int LOGO_SIZE = 80;
-	private static final int MENU_WIDTH = 116;
-	private static final int ROW = 20;
-	private static final int INSET = 2;
-	private static final int GAP = 10;
+	private static final int LOGO_SIZE = 72;
+	private static final int MENU_WIDTH = 88;
+	private static final int ROW = 22;
+	private static final int INSET = 3;
+	private static final int GAP = 8;
 	private static final int EXIT_WIDTH = 84;
 	private static final int EXIT_HEIGHT = 20;
 	private static final int KNOB = 16;
+	private static final float LABEL = 7.5F;
+	private static final float SMALL = 7.0F;
 	private static final int PANEL = 0x08FFFFFF;
 	private static final int EDGE = 0x14FFFFFF;
 	private static final int HIGHLIGHT = 0x10FFFFFF;
@@ -31,17 +33,16 @@ public final class MainMenuScreen extends BatonScreen {
 	private static final int TEXT = 0xFF8C98AB;
 	private static final int TEXT_ACTIVE = 0xFFF2F6FC;
 	private static final int MUTED = 0xFF6B788C;
+	private static final int TRAIL = 0xFF1A2537;
 	private static final int KNOB_COLOR = 0xFFE6F2FF;
 	private static final int KNOB_ICON = 0xFF0B1220;
 
 	private final Entry[] entries = {
-		entry("Одиночная", () -> minecraft.setScreen(new SelectWorldScreen(this))),
-		entry("Серверы", () -> minecraft.setScreen(new JoinMultiplayerScreen(this))),
-		entry("Профили", () -> minecraft.setScreen(new ProfilesScreen(this))),
-		entry("Параметры", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options)))
+		new Entry("Одиночная", () -> minecraft.setScreen(new SelectWorldScreen(this))),
+		new Entry("Серверы", () -> minecraft.setScreen(new JoinMultiplayerScreen(this))),
+		new Entry("Профили", () -> minecraft.setScreen(new ProfilesScreen(this))),
+		new Entry("Параметры", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options)))
 	};
-	private final Component exitLabel = Ui.text("Выход");
-	private final Component exitIcon = Ui.text("→");
 	private int menuX;
 	private int menuY;
 	private int logoY;
@@ -55,8 +56,7 @@ public final class MainMenuScreen extends BatonScreen {
 
 	@Override
 	protected void init() {
-		int menuHeight = entries.length * ROW + INSET * 2;
-		logoY = (height - LOGO_SIZE - GAP - menuHeight) / 2 - 8;
+		logoY = (height - LOGO_SIZE - GAP - menuHeight()) / 2 - 10;
 		menuX = (width - MENU_WIDTH) / 2;
 		menuY = logoY + LOGO_SIZE + GAP;
 		exitX = (width - EXIT_WIDTH) / 2;
@@ -81,28 +81,24 @@ public final class MainMenuScreen extends BatonScreen {
 		int tint = ARGB.colorFromFloat(appear, appear, appear, appear);
 		graphics.blit(RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA, LOGO, (width - LOGO_SIZE) / 2, logoY, 0, 0, LOGO_SIZE, LOGO_SIZE, LOGO_TEXTURE, LOGO_TEXTURE, LOGO_TEXTURE, LOGO_TEXTURE, tint);
 
-		int menuHeight = entries.length * ROW + INSET * 2;
-		Ui.rect(graphics, menuX, menuY, MENU_WIDTH, menuHeight, 8.0F, Ui.fade(PANEL, appear));
-		Ui.outline(graphics, menuX, menuY, MENU_WIDTH, menuHeight, 8.0F, 0.5F, Ui.fade(EDGE, appear));
+		Ui.rect(graphics, menuX, menuY, MENU_WIDTH, menuHeight(), 9.0F, Ui.fade(PANEL, appear));
+		Ui.outline(graphics, menuX, menuY, MENU_WIDTH, menuHeight(), 9.0F, 0.5F, Ui.fade(EDGE, appear));
 		float highlight = appear * highlightAlpha;
-		Ui.rect(graphics, menuX + INSET, highlightY, MENU_WIDTH - INSET * 2, ROW, 6.0F, Ui.fade(HIGHLIGHT, highlight));
-		Ui.rect(graphics, width / 2.0F - 4.0F, highlightY + ROW - 3.0F, 8.0F, 1.0F, 0.5F, Ui.fade(ACCENT, highlight));
+		Ui.rect(graphics, menuX + INSET, highlightY, MENU_WIDTH - INSET * 2, ROW, 7.0F, Ui.fade(HIGHLIGHT, highlight));
+		Ui.rect(graphics, width / 2.0F - 4.0F, highlightY + ROW - 3.5F, 8.0F, 1.0F, 0.5F, Ui.fade(ACCENT, highlight));
 		for (int i = 0; i < entries.length; i++) {
 			float focus = highlightAlpha * Mth.clamp(1.0F - Math.abs(highlightY - rowY(i)) / ROW, 0.0F, 1.0F);
-			Entry entry = entries[i];
-			graphics.drawString(font, entry.label, (width - entry.width) / 2, rowY(i) + 6, Ui.fade(ARGB.srgbLerp(focus, TEXT, TEXT_ACTIVE), appear), false);
+			UiFont.drawCentered(graphics, entries[i].label, width / 2.0F, rowY(i) + ROW / 2.0F, LABEL, Ui.fade(ARGB.srgbLerp(focus, TEXT, TEXT_ACTIVE), appear));
 		}
 
-		Ui.rect(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, EXIT_HEIGHT / 2.0F, Ui.fade(PANEL, appear));
-		Ui.outline(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, EXIT_HEIGHT / 2.0F, 0.5F, Ui.fade(EDGE, appear));
-		int labelX = exitX + KNOB + 4 + (EXIT_WIDTH - KNOB - 4 - font.width(exitLabel)) / 2;
-		graphics.drawString(font, exitLabel, labelX, exitY + 6, Ui.fade(MUTED, appear * (1.0F - knob)), false);
+		float radius = EXIT_HEIGHT / 2.0F;
+		Ui.rect(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, radius, Ui.fade(PANEL, appear));
+		Ui.outline(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, radius, 0.5F, Ui.fade(EDGE, appear));
+		UiFont.drawCentered(graphics, "Выход", width / 2.0F, exitY + radius, SMALL, Ui.fade(MUTED, appear));
 		float knobX = knobX();
+		Ui.rect(graphics, exitX + 2, exitY + 2, knobX - exitX - 2 + KNOB, KNOB, KNOB / 2.0F, Ui.fade(TRAIL, appear));
 		Ui.rect(graphics, knobX, exitY + 2, KNOB, KNOB, KNOB / 2.0F, Ui.fade(KNOB_COLOR, appear));
-		graphics.pose().pushMatrix();
-		graphics.pose().translate(knobX + (KNOB - font.width(exitIcon)) / 2.0F, exitY + 6);
-		graphics.drawString(font, exitIcon, 0, 0, Ui.fade(KNOB_ICON, appear), false);
-		graphics.pose().popMatrix();
+		UiFont.drawCentered(graphics, "→", knobX + KNOB / 2.0F, exitY + radius, SMALL, Ui.fade(KNOB_ICON, appear));
 	}
 
 	@Override
@@ -152,6 +148,10 @@ public final class MainMenuScreen extends BatonScreen {
 		return false;
 	}
 
+	private int menuHeight() {
+		return entries.length * ROW + INSET * 2;
+	}
+
 	private int hovered(double x, double y) {
 		for (int i = 0; i < entries.length; i++) {
 			if (inside(x, y, menuX + INSET, rowY(i), MENU_WIDTH - INSET * 2, ROW)) {
@@ -177,11 +177,6 @@ public final class MainMenuScreen extends BatonScreen {
 		return inside(x, y, knobX(), exitY + 2, KNOB, KNOB);
 	}
 
-	private Entry entry(String label, Runnable action) {
-		Component text = Ui.text(label);
-		return new Entry(text, font.width(text), action);
-	}
-
-	private record Entry(Component label, int width, Runnable action) {
+	private record Entry(String label, Runnable action) {
 	}
 }
