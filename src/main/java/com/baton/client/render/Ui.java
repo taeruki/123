@@ -1,6 +1,5 @@
 package com.baton.client.render;
 
-import com.baton.client.mixin.GuiGraphicsAccessor;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
@@ -8,25 +7,34 @@ import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
 public final class Ui {
 	public static final String MOD_ID = "baton";
+	public static final int BACKGROUND = 0xFF0B0C0F;
+	public static final int PANEL = 0xFF121318;
+	public static final int EDGE = 0x12FFFFFF;
+	public static final int HOVER = 0x08FFFFFF;
+	public static final int SELECTED = 0x10FFFFFF;
+	public static final int FIELD = 0x40000000;
+	public static final int TEXT = 0xFF979DAA;
+	public static final int TEXT_ACTIVE = 0xFFF4F5F8;
+	public static final int MUTED = 0xFF5F6573;
+	public static final int ACCENT = 0xFFE9ECF2;
+	public static final int ON_ACCENT = 0xFF0C0E13;
+	public static final int DANGER = 0xFFFF8A94;
+	public static final int DANGER_FILL = 0x14FF5A64;
+	public static final int DANGER_HOVER = 0x24FF5A64;
+	private static final int CONTROL = 0xFF17181D;
+	private static final int CONTROL_HOVER = 0xFF1E2026;
+	private static final int CONTROL_DISABLED = 0xFF131418;
 	private static final RenderPipeline SHAPE = pipeline("shape")
 		.withVertexShader(id("core/shape"))
 		.withFragmentShader(id("core/shape"))
 		.withVertexFormat(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS)
 		.build();
-	private static final int PANEL = 0xFF121318;
-	private static final int PANEL_EDGE = 0x12FFFFFF;
-	private static final int PANEL_SHADOW = 0x8C000000;
-	@Nullable
-	private static ScreenRectangle scissor;
 
 	private Ui() {
 	}
@@ -43,24 +51,15 @@ public final class Ui {
 		shape(graphics, x, y, width, height, color, radius, stroke);
 	}
 
-	public static void shadow(GuiGraphics graphics, float x, float y, float width, float height, float radius, float softness, int color) {
-		shape(graphics, x, y, width, height, color, radius, -softness);
-	}
-
 	public static void panel(GuiGraphics graphics, float x, float y, float width, float height, float radius, float alpha) {
-		shadow(graphics, x, y + 4.0F, width, height, radius, 14.0F, fade(PANEL_SHADOW, alpha));
 		rect(graphics, x, y, width, height, radius, fade(PANEL, alpha));
-		outline(graphics, x, y, width, height, radius, 0.5F, fade(PANEL_EDGE, alpha));
+		outline(graphics, x, y, width, height, radius, 0.5F, fade(EDGE, alpha));
 	}
 
-	public static void clip(GuiGraphics graphics, int x0, int y0, int x1, int y1) {
-		graphics.enableScissor(x0, y0, x1, y1);
-		scissor = new ScreenRectangle(x0, y0, x1 - x0, y1 - y0).transformAxisAligned(graphics.pose());
-	}
-
-	public static void unclip(GuiGraphics graphics) {
-		graphics.disableScissor();
-		scissor = null;
+	public static void control(GuiGraphics graphics, float x, float y, float width, float height, boolean hovered, boolean active, float alpha) {
+		float radius = Math.min(height / 2.0F, 7.0F);
+		rect(graphics, x, y, width, height, radius, fade(!active ? CONTROL_DISABLED : hovered ? CONTROL_HOVER : CONTROL, alpha));
+		outline(graphics, x, y, width, height, radius, 0.5F, fade(EDGE, alpha));
 	}
 
 	public static float approach(float value, float target, float speed, float delta) {
@@ -69,20 +68,6 @@ public final class Ui {
 
 	public static int fade(int color, float alpha) {
 		return ARGB.multiplyAlpha(color, alpha);
-	}
-
-	@Nullable
-	static ScreenRectangle bounds(ScreenRectangle area) {
-		return scissor != null ? scissor.intersection(area) : area;
-	}
-
-	@Nullable
-	static ScreenRectangle scissor() {
-		return scissor;
-	}
-
-	static void submit(GuiGraphics graphics, GuiElementRenderState state) {
-		((GuiGraphicsAccessor) graphics).baton$renderState().submitGuiElement(state);
 	}
 
 	static RenderPipeline.Builder pipeline(String name) {
@@ -96,7 +81,9 @@ public final class Ui {
 
 	private static void shape(GuiGraphics graphics, float x, float y, float width, float height, int color, float radius, float stroke) {
 		if (ARGB.alpha(color) != 0) {
-			submit(graphics, ShapeRenderState.of(SHAPE, new Matrix3x2f(graphics.pose()), x, y, width, height, color, Math.round(radius * 8), Math.round(stroke * 8)));
+			graphics.guiRenderState.submitGuiElement(ShapeRenderState.of(
+				SHAPE, new Matrix3x2f(graphics.pose()), graphics.scissorStack.peek(), x, y, width, height, color, Math.round(radius * 8), Math.round(stroke * 8)
+			));
 		}
 	}
 }

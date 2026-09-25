@@ -4,9 +4,7 @@ import com.baton.client.render.Ui;
 import com.baton.client.render.UiFont;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
-import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
@@ -36,8 +34,8 @@ public final class MainMenuScreen extends BatonScreen {
 	private static final int KNOB_ICON = 0xFF0C0E13;
 
 	private final Entry[] entries = {
-		new Entry("Одиночная", () -> minecraft.setScreen(new SelectWorldScreen(this))),
-		new Entry("Серверы", () -> minecraft.setScreen(new JoinMultiplayerScreen(this))),
+		new Entry("Одиночная", () -> minecraft.setScreen(new WorldsScreen(this))),
+		new Entry("Серверы", () -> minecraft.setScreen(new ServersScreen(this))),
 		new Entry("Профили", () -> minecraft.setScreen(new ProfilesScreen(this))),
 		new Entry("Параметры", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options)))
 	};

@@ -4,6 +4,7 @@
 	"version": "${version}",
 	"name": "Baton",
 	"environment": "client",
+	"accessWidener": "baton.accesswidener",
 	"mixins": [
 		"baton.mixins.json"
 	],

@@ -16,28 +16,28 @@ public record ShapeRenderState(
 	float y,
 	float width,
 	float height,
-	float padding,
 	int color,
 	int radius,
 	int stroke,
 	@Nullable ScreenRectangle scissorArea,
 	@Nullable ScreenRectangle bounds
 ) implements GuiElementRenderState {
-	static ShapeRenderState of(RenderPipeline pipeline, Matrix3x2fc pose, float x, float y, float width, float height, int color, int radius, int stroke) {
-		float padding = 1.0F + Math.max(-stroke, 0) / 8.0F;
+	private static final float PADDING = 1.0F;
+
+	static ShapeRenderState of(RenderPipeline pipeline, Matrix3x2fc pose, @Nullable ScreenRectangle scissor, float x, float y, float width, float height, int color, int radius, int stroke) {
 		ScreenRectangle area = new ScreenRectangle(
-			Mth.floor(x - padding),
-			Mth.floor(y - padding),
-			Mth.ceil(width + padding * 2) + 1,
-			Mth.ceil(height + padding * 2) + 1
+			Mth.floor(x - PADDING),
+			Mth.floor(y - PADDING),
+			Mth.ceil(width + PADDING * 2) + 1,
+			Mth.ceil(height + PADDING * 2) + 1
 		).transformMaxBounds(pose);
-		return new ShapeRenderState(pipeline, pose, x, y, width, height, padding, color, radius, stroke, Ui.scissor(), Ui.bounds(area));
+		return new ShapeRenderState(pipeline, pose, x, y, width, height, color, radius, stroke, scissor, scissor != null ? scissor.intersection(area) : area);
 	}
 
 	@Override
 	public void buildVertices(VertexConsumer consumer) {
-		float halfWidth = width * 0.5F + padding;
-		float halfHeight = height * 0.5F + padding;
+		float halfWidth = width * 0.5F + PADDING;
+		float halfHeight = height * 0.5F + PADDING;
 		float centerX = x + width * 0.5F;
 		float centerY = y + height * 0.5F;
 		vertex(consumer, centerX, centerY, -halfWidth, -halfHeight);

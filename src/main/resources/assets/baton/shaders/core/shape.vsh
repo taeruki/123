@@ -16,6 +16,5 @@ void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     vertexColor = Color;
     local = UV0;
-    vec2 params = vec2(UV2) / 8.0;
-    shape = vec4(abs(UV0) - 1.0 - max(-params.y, 0.0), params);
+    shape = vec4(abs(UV0) - 1.0, vec2(UV2) / 8.0);
 }

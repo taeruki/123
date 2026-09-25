@@ -25,6 +25,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.render.state.GuiElementRenderState;
+import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -44,6 +47,9 @@ public final class UiFont {
 	private static final float DISTANCE_SCALE = 128.0F / PADDING;
 	private static final int ATLAS_WIDTH = 1024;
 	private static final char[] RANGES = {' ', '~', '\u00A0', '\u00FF', '\u0400', '\u045F', '\u2013', '\u2026', '\u2190', '\u2193', '\u2713', '\u2713'};
+	private static final float LABEL = 8.0F;
+	private static final float MIN_LABEL = 6.0F;
+	private static final int LABEL_COLOR = 0xE8EAEF;
 	private static final RenderPipeline PIPELINE = Ui.pipeline("text")
 		.withVertexShader(Identifier.withDefaultNamespace("core/position_tex_color"))
 		.withFragmentShader(Ui.id("core/text"))
@@ -74,20 +80,44 @@ public final class UiFont {
 		return width * size;
 	}
 
-	public static void draw(GuiGraphics graphics, String text, float x, float centerY, float size, int color) {
-		if (text.isEmpty() || ARGB.alpha(color) == 0) {
-			return;
+	public static String ellipsize(String text, float size, float maxWidth) {
+		if (width(text, size) <= maxWidth) {
+			return text;
 		}
-		Atlas font = atlas.join();
-		Matrix3x2f pose = new Matrix3x2f(graphics.pose());
-		ScreenRectangle area = new ScreenRectangle(Mth.floor(x) - 1, Mth.floor(centerY - size), Mth.ceil(width(text, size)) + 2, Mth.ceil(size * 2)).transformMaxBounds(pose);
-		float baseline = centerY + font.capHeight() * size * 0.5F;
-		int scale = Minecraft.getInstance().getWindow().getGuiScale();
-		Ui.submit(graphics, new Text(texture(font), pose, font, text, x, baseline, size, scale, color, Ui.scissor(), Ui.bounds(area)));
+		int end = text.length();
+		while (end > 0 && width(text.substring(0, end) + "…", size) > maxWidth) {
+			end--;
+		}
+		return text.substring(0, end) + "…";
+	}
+
+	public static void draw(GuiGraphics graphics, String text, float x, float centerY, float size, int color) {
+		draw(graphics.guiRenderState, graphics.pose(), graphics.scissorStack.peek(), text, x, centerY, size, color);
 	}
 
 	public static void drawCentered(GuiGraphics graphics, String text, float centerX, float centerY, float size, int color) {
 		draw(graphics, text, centerX - width(text, size) * 0.5F, centerY, size, color);
+	}
+
+	public static void label(GuiRenderState state, Matrix3x2fc pose, @Nullable ScreenRectangle scissor, Component component, float left, float right, float centerY, float opacity) {
+		String text = component.getString();
+		float natural = width(text, 1.0F);
+		float size = natural > 0.0F ? Mth.clamp((right - left - 4.0F) / natural, MIN_LABEL, LABEL) : LABEL;
+		TextColor color = component.getStyle().getColor();
+		int argb = ARGB.color(ARGB.as8BitChannel(opacity), color != null ? color.getValue() : LABEL_COLOR);
+		draw(state, pose, scissor, text, (left + right - natural * size) * 0.5F, centerY, size, argb);
+	}
+
+	private static void draw(GuiRenderState state, Matrix3x2fc pose, @Nullable ScreenRectangle scissor, String text, float x, float centerY, float size, int color) {
+		if (text.isEmpty() || ARGB.alpha(color) == 0) {
+			return;
+		}
+		Atlas font = atlas.join();
+		Matrix3x2f snapshot = new Matrix3x2f(pose);
+		ScreenRectangle area = new ScreenRectangle(Mth.floor(x) - 1, Mth.floor(centerY - size), Mth.ceil(width(text, size)) + 2, Mth.ceil(size * 2)).transformMaxBounds(snapshot);
+		float baseline = centerY + font.capHeight() * size * 0.5F;
+		int scale = Minecraft.getInstance().getWindow().getGuiScale();
+		state.submitGuiElement(new Text(texture(font), snapshot, font, text, x, baseline, size, scale, color, scissor, scissor != null ? scissor.intersection(area) : area));
 	}
 
 	private static TextureSetup texture(Atlas font) {

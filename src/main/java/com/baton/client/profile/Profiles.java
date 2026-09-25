@@ -1,6 +1,5 @@
 package com.baton.client.profile;
 
-import com.baton.client.mixin.MinecraftAccessor;
 import com.mojang.logging.LogUtils;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -62,10 +61,9 @@ public final class Profiles {
 		current = name;
 		Minecraft minecraft = Minecraft.getInstance();
 		if (!name.equals(minecraft.getUser().getName())) {
-			MinecraftAccessor accessor = (MinecraftAccessor) minecraft;
-			accessor.baton$setUser(new User(name, UUIDUtil.createOfflinePlayerUUID(name), "", Optional.empty(), Optional.empty()));
-			accessor.baton$setProfileFuture(CompletableFuture.completedFuture(null));
-			accessor.baton$setProfileKeyPairManager(ProfileKeyPairManager.EMPTY_KEY_MANAGER);
+			minecraft.user = new User(name, UUIDUtil.createOfflinePlayerUUID(name), "", Optional.empty(), Optional.empty());
+			minecraft.profileFuture = CompletableFuture.completedFuture(null);
+			minecraft.profileKeyPairManager = ProfileKeyPairManager.EMPTY_KEY_MANAGER;
 		}
 		save();
 	}
@@ -83,12 +81,6 @@ public final class Profiles {
 
 	public static boolean valid(String name) {
 		return VALID.matcher(name).matches();
-	}
-
-	public static String sanitize(String text) {
-		StringBuilder builder = new StringBuilder(MAX_LENGTH);
-		text.codePoints().filter(Profiles::allowed).limit(MAX_LENGTH).forEach(builder::appendCodePoint);
-		return builder.toString();
 	}
 
 	public static boolean allowed(int codePoint) {

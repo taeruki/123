@@ -1,0 +1,12 @@
+accessWidener v2 named
+accessible field net/minecraft/client/gui/GuiGraphics guiRenderState Lnet/minecraft/client/gui/render/state/GuiRenderState;
+accessible field net/minecraft/client/gui/GuiGraphics scissorStack Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;
+accessible class net/minecraft/client/gui/GuiGraphics$ScissorStack
+accessible field net/minecraft/client/renderer/GameRenderer guiRenderState Lnet/minecraft/client/gui/render/state/GuiRenderState;
+accessible field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
+mutable field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;
+accessible field net/minecraft/client/Minecraft profileFuture Ljava/util/concurrent/CompletableFuture;
+mutable field net/minecraft/client/Minecraft profileFuture Ljava/util/concurrent/CompletableFuture;
+accessible field net/minecraft/client/Minecraft profileKeyPairManager Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;
+mutable field net/minecraft/client/Minecraft profileKeyPairManager Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;
+accessible field net/minecraft/client/gui/screens/multiplayer/ServerSelectionList THREAD_POOL Ljava/util/concurrent/ThreadPoolExecutor;

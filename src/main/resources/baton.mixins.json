@@ -3,12 +3,18 @@
 	"package": "com.baton.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
+		"AbstractButtonMixin",
+		"AbstractScrollAreaMixin",
+		"AbstractSelectionListMixin",
+		"AbstractSliderButtonMixin",
+		"AbstractStringWidgetMixin",
 		"ClientPackSourceMixin",
-		"GuiGraphicsAccessor",
-		"MinecraftAccessor",
+		"EditBoxMixin",
 		"MinecraftMixin",
 		"OptionsMixin",
-		"PackSelectionModelMixin"
+		"PackSelectionModelMixin",
+		"RenderingTextCollectorMixin",
+		"ScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
