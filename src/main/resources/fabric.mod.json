@@ -1,0 +1,18 @@
+{
+	"schemaVersion": 1,
+	"id": "baton",
+	"version": "${version}",
+	"name": "Baton",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.baton.client.BatonClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
