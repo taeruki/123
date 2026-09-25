@@ -3,6 +3,7 @@ package com.baton.client.mixin;
 import com.baton.client.profile.Profiles;
 import com.baton.client.render.UiFont;
 import com.baton.client.screen.MainMenuScreen;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
@@ -36,5 +38,10 @@ public abstract class MinecraftMixin {
 			setScreen(new MainMenuScreen());
 			ci.cancel();
 		}
+	}
+
+	@Inject(method = "createTitle", at = @At("HEAD"), cancellable = true)
+	private void baton$title(CallbackInfoReturnable<String> cir) {
+		cir.setReturnValue("Baton " + SharedConstants.getCurrentVersion().name());
 	}
 }

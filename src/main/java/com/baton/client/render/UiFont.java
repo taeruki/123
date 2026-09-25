@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
@@ -36,9 +37,9 @@ import org.lwjgl.stb.STBTruetype;
 import org.lwjgl.system.MemoryUtil;
 
 public final class UiFont {
-	private static final String FILE = "/assets/" + Ui.MOD_ID + "/font/onest.ttf";
-	private static final float BAKE_EM = 40.0F;
-	private static final int PADDING = 5;
+	private static final String FILE = "/assets/" + Ui.MOD_ID + "/font/inter.ttf";
+	private static final float BAKE_EM = 48.0F;
+	private static final int PADDING = 6;
 	private static final byte ON_EDGE = (byte) 128;
 	private static final float DISTANCE_SCALE = 128.0F / PADDING;
 	private static final int ATLAS_WIDTH = 1024;
@@ -81,7 +82,8 @@ public final class UiFont {
 		Matrix3x2f pose = new Matrix3x2f(graphics.pose());
 		ScreenRectangle area = new ScreenRectangle(Mth.floor(x) - 1, Mth.floor(centerY - size), Mth.ceil(width(text, size)) + 2, Mth.ceil(size * 2)).transformMaxBounds(pose);
 		float baseline = centerY + font.capHeight() * size * 0.5F;
-		Ui.submit(graphics, new Text(texture(font), pose, font, text, x, baseline, size, color, Ui.scissor(), Ui.bounds(area)));
+		int scale = Minecraft.getInstance().getWindow().getGuiScale();
+		Ui.submit(graphics, new Text(texture(font), pose, font, text, x, baseline, size, scale, color, Ui.scissor(), Ui.bounds(area)));
 	}
 
 	public static void drawCentered(GuiGraphics graphics, String text, float centerX, float centerY, float size, int color) {
@@ -212,13 +214,18 @@ public final class UiFont {
 		float x,
 		float baseline,
 		float size,
+		int scale,
 		int color,
 		@Nullable ScreenRectangle scissorArea,
 		@Nullable ScreenRectangle bounds
 	) implements GuiElementRenderState {
 		@Override
 		public void buildVertices(VertexConsumer consumer) {
-			float pen = x;
+			float originX = pose.m00() * x + pose.m10() * baseline + pose.m20();
+			float originY = pose.m01() * x + pose.m11() * baseline + pose.m21();
+			float snapX = Math.round(originX * scale) / (float) scale - originX;
+			float snapY = Math.round(originY * scale) / (float) scale - originY;
+			float pen = 0.0F;
 			char previous = 0;
 			for (int i = 0; i < text.length(); i++) {
 				char c = text.charAt(i);
@@ -227,16 +234,20 @@ public final class UiFont {
 				if (glyph.u0() != glyph.u1()) {
 					float x0 = pen + glyph.left() * size;
 					float x1 = pen + glyph.right() * size;
-					float y0 = baseline + glyph.top() * size;
-					float y1 = baseline + glyph.bottom() * size;
-					consumer.addVertexWith2DPose(pose, x0, y0).setUv(glyph.u0(), glyph.v0()).setColor(color);
-					consumer.addVertexWith2DPose(pose, x0, y1).setUv(glyph.u0(), glyph.v1()).setColor(color);
-					consumer.addVertexWith2DPose(pose, x1, y1).setUv(glyph.u1(), glyph.v1()).setColor(color);
-					consumer.addVertexWith2DPose(pose, x1, y0).setUv(glyph.u1(), glyph.v0()).setColor(color);
+					float y0 = glyph.top() * size;
+					float y1 = glyph.bottom() * size;
+					vertex(consumer, originX + snapX, originY + snapY, x0, y0, glyph.u0(), glyph.v0());
+					vertex(consumer, originX + snapX, originY + snapY, x0, y1, glyph.u0(), glyph.v1());
+					vertex(consumer, originX + snapX, originY + snapY, x1, y1, glyph.u1(), glyph.v1());
+					vertex(consumer, originX + snapX, originY + snapY, x1, y0, glyph.u1(), glyph.v0());
 				}
 				pen += glyph.advance() * size;
 				previous = c;
 			}
+		}
+
+		private void vertex(VertexConsumer consumer, float originX, float originY, float offsetX, float offsetY, float u, float v) {
+			consumer.addVertex(originX + pose.m00() * offsetX + pose.m10() * offsetY, originY + pose.m01() * offsetX + pose.m11() * offsetY, 0.0F).setUv(u, v).setColor(color);
 		}
 
 		@Override

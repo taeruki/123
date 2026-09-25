@@ -12,19 +12,19 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
 public final class Ui {
 	public static final String MOD_ID = "baton";
-	private static final RenderPipeline SHAPE = shapePipeline("shape").withShaderDefine("PADDED").build();
-	private static final RenderPipeline SNOW = shapePipeline("snow").build();
-	private static final RenderPipeline GLASS = shapePipeline("glass").build();
-	private static final long TIME_PERIOD_MILLIS = 3_600_000L;
-	private static final float EDGE = 1.0F;
-	private static final int GLASS_TINT = 0xFF9AA1B0;
-	private static final int GLASS_SHADOW = 0x66000000;
+	private static final RenderPipeline SHAPE = pipeline("shape")
+		.withVertexShader(id("core/shape"))
+		.withFragmentShader(id("core/shape"))
+		.withVertexFormat(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS)
+		.build();
+	private static final int PANEL = 0xFF121318;
+	private static final int PANEL_EDGE = 0x12FFFFFF;
+	private static final int PANEL_SHADOW = 0x8C000000;
 	@Nullable
 	private static ScreenRectangle scissor;
 
@@ -36,29 +36,21 @@ public final class Ui {
 	}
 
 	public static void rect(GuiGraphics graphics, float x, float y, float width, float height, float radius, int color) {
-		shape(graphics, SHAPE, x, y, width, height, EDGE, EDGE, color, radius, 0.0F);
+		shape(graphics, x, y, width, height, color, radius, 0.0F);
 	}
 
 	public static void outline(GuiGraphics graphics, float x, float y, float width, float height, float radius, float stroke, int color) {
-		shape(graphics, SHAPE, x, y, width, height, EDGE, EDGE, color, radius, stroke);
+		shape(graphics, x, y, width, height, color, radius, stroke);
 	}
 
 	public static void shadow(GuiGraphics graphics, float x, float y, float width, float height, float radius, float softness, int color) {
-		float padding = EDGE + softness;
-		shape(graphics, SHAPE, x, y, width, height, padding, padding, color, radius, -softness);
+		shape(graphics, x, y, width, height, color, radius, -softness);
 	}
 
-	public static void glass(GuiGraphics graphics, float x, float y, float width, float height, float radius, float alpha) {
-		glass(graphics, x, y, width, height, radius, GLASS_TINT, 0.07F, alpha);
-	}
-
-	public static void glass(GuiGraphics graphics, float x, float y, float width, float height, float radius, int tint, float strength, float alpha) {
-		shadow(graphics, x, y + 3.0F, width, height, radius, 9.0F, fade(GLASS_SHADOW, alpha));
-		shape(graphics, GLASS, x, y, width, height, EDGE, time(), fade(tint, alpha), radius, strength * 125.0F);
-	}
-
-	public static void snow(GuiGraphics graphics, int width, int height) {
-		shape(graphics, SNOW, 0, 0, width, height, EDGE, time(), 0xFFFFFFFF, 0.0F, 0.0F);
+	public static void panel(GuiGraphics graphics, float x, float y, float width, float height, float radius, float alpha) {
+		shadow(graphics, x, y + 4.0F, width, height, radius, 14.0F, fade(PANEL_SHADOW, alpha));
+		rect(graphics, x, y, width, height, radius, fade(PANEL, alpha));
+		outline(graphics, x, y, width, height, radius, 0.5F, fade(PANEL_EDGE, alpha));
 	}
 
 	public static void clip(GuiGraphics graphics, int x0, int y0, int x1, int y1) {
@@ -102,20 +94,9 @@ public final class Ui {
 			.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST);
 	}
 
-	private static float time() {
-		return (Util.getMillis() % TIME_PERIOD_MILLIS) / 1000.0F;
-	}
-
-	private static void shape(GuiGraphics graphics, RenderPipeline pipeline, float x, float y, float width, float height, float padding, float z, int color, float a, float b) {
+	private static void shape(GuiGraphics graphics, float x, float y, float width, float height, int color, float radius, float stroke) {
 		if (ARGB.alpha(color) != 0) {
-			submit(graphics, ShapeRenderState.of(pipeline, new Matrix3x2f(graphics.pose()), x, y, width, height, padding, z, color, Math.round(a * 8), Math.round(b * 8)));
+			submit(graphics, ShapeRenderState.of(SHAPE, new Matrix3x2f(graphics.pose()), x, y, width, height, color, Math.round(radius * 8), Math.round(stroke * 8)));
 		}
-	}
-
-	private static RenderPipeline.Builder shapePipeline(String fragment) {
-		return pipeline(fragment)
-			.withVertexShader(id("core/shape"))
-			.withFragmentShader(id("core/" + fragment))
-			.withVertexFormat(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS);
 	}
 }

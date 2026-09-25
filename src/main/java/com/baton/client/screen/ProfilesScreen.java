@@ -21,26 +21,23 @@ import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.PlayerSkin;
 
 public final class ProfilesScreen extends BatonScreen {
-	private static final int WIDTH = 160;
+	private static final int WIDTH = 136;
 	private static final int PAD = 5;
-	private static final int TITLE_HEIGHT = 28;
+	private static final int TITLE_HEIGHT = 32;
 	private static final int ROW = 20;
 	private static final int HEAD = 12;
-	private static final int VISIBLE_ROWS = 7;
-	private static final int CONTROL = 18;
-	private static final int RANDOM_WIDTH = 56;
+	private static final int VISIBLE_ROWS = 9;
+	private static final int CONTROL = 20;
 	private static final int REMOVE = 16;
-	private static final int CLEAR_WIDTH = 112;
-	private static final int CLEAR_GAP = 7;
-	private static final float TITLE = 11.0F;
-	private static final float TEXT_SIZE = 7.5F;
-	private static final float SMALL = 6.5F;
+	private static final int GAP = 6;
+	private static final float TITLE = 12.0F;
+	private static final float TEXT_SIZE = 8.5F;
+	private static final float SMALL = 7.5F;
 	private static final int HOVER = 0x08FFFFFF;
 	private static final int SELECTED = 0x10FFFFFF;
 	private static final int FIELD = 0x40000000;
-	private static final int FIELD_EDGE = 0x10FFFFFF;
-	private static final int BUTTON = 0x10FFFFFF;
-	private static final int BUTTON_HOVER = 0x1CFFFFFF;
+	private static final int FIELD_EDGE = 0x0EFFFFFF;
+	private static final int BUTTON = 0x0EFFFFFF;
 	private static final int CONFIRM = 0xFFE9ECF2;
 	private static final int CONFIRM_ICON = 0xFF0C0E13;
 	private static final int TITLE_COLOR = 0xFFECEEF3;
@@ -49,7 +46,8 @@ public final class ProfilesScreen extends BatonScreen {
 	private static final int MUTED = 0xFF5F6573;
 	private static final int SCROLLBAR = 0x1AFFFFFF;
 	private static final int DANGER = 0xFFFF8A94;
-	private static final int DANGER_TINT = 0xFFFF5A64;
+	private static final int DANGER_BUTTON = 0x12FF5A64;
+	private static final int DANGER_HOVER = 0x22FF5A64;
 
 	private final Screen parent;
 	private final List<Row> rows = new ArrayList<>();
@@ -62,7 +60,7 @@ public final class ProfilesScreen extends BatonScreen {
 	private int listY;
 	private int listHeight;
 	private int fieldY;
-	private int clearY;
+	private int buttonsY;
 	private float scroll;
 	private float scrollTarget;
 
@@ -87,14 +85,14 @@ public final class ProfilesScreen extends BatonScreen {
 			graphics.requestCursor(CursorTypes.POINTING_HAND);
 		}
 
-		UiFont.drawCentered(graphics, "Профили", width / 2.0F, titleY + 5, TITLE, Ui.fade(TITLE_COLOR, appear));
+		UiFont.drawCentered(graphics, "Профили", width / 2.0F, titleY + 6, TITLE, Ui.fade(TITLE_COLOR, appear));
 		String name = Profiles.current();
 		float nameWidth = UiFont.width(name, SMALL);
 		float subtitleX = (width - nameWidth - UiFont.width(count, SMALL)) / 2.0F;
-		UiFont.draw(graphics, name, subtitleX, titleY + 18, SMALL, Ui.fade(TEXT, appear));
-		UiFont.draw(graphics, count, subtitleX + nameWidth, titleY + 18, SMALL, Ui.fade(MUTED, appear));
+		UiFont.draw(graphics, name, subtitleX, titleY + 20, SMALL, Ui.fade(TEXT, appear));
+		UiFont.draw(graphics, count, subtitleX + nameWidth, titleY + 20, SMALL, Ui.fade(MUTED, appear));
 
-		Ui.glass(graphics, x, cardY, WIDTH, cardHeight, 10.0F, appear);
+		Ui.panel(graphics, x, cardY, WIDTH, cardHeight, 10.0F, appear);
 		int rowX = x + PAD;
 		int rowWidth = WIDTH - PAD * 2;
 		Ui.clip(graphics, rowX, listY, rowX + rowWidth, listY + listHeight);
@@ -115,7 +113,7 @@ public final class ProfilesScreen extends BatonScreen {
 			if (selected) {
 				Ui.rect(graphics, iconX - 1.5F, rowY + ROW / 2.0F - 1.5F, 3.0F, 3.0F, 1.5F, Ui.fade(TEXT_ACTIVE, appear));
 			} else if (hovered) {
-				UiFont.drawCentered(graphics, "×", iconX, rowY + ROW / 2.0F, 8.0F, Ui.fade(overRemove(mouseX) ? DANGER : MUTED, appear));
+				UiFont.drawCentered(graphics, "×", iconX, rowY + ROW / 2.0F, 9.0F, Ui.fade(overRemove(mouseX) ? DANGER : MUTED, appear));
 			}
 		}
 		Ui.unclip(graphics);
@@ -125,29 +123,32 @@ public final class ProfilesScreen extends BatonScreen {
 			Ui.rect(graphics, x + WIDTH - 3.0F, listY + scroll / maxScroll * (listHeight - barHeight), 1.0F, barHeight, 0.5F, Ui.fade(SCROLLBAR, appear));
 		}
 
-		int fieldWidth = fieldWidth();
-		Ui.rect(graphics, rowX, fieldY, fieldWidth, CONTROL, 6.0F, Ui.fade(FIELD, appear));
-		Ui.outline(graphics, rowX, fieldY, fieldWidth, CONTROL, 6.0F, 0.5F, Ui.fade(FIELD_EDGE, appear));
+		int fieldWidth = rowWidth - CONTROL - 3;
+		Ui.rect(graphics, rowX, fieldY, fieldWidth, CONTROL, 7.0F, Ui.fade(FIELD, appear));
+		Ui.outline(graphics, rowX, fieldY, fieldWidth, CONTROL, 7.0F, 0.5F, Ui.fade(FIELD_EDGE, appear));
 		Ui.clip(graphics, rowX + 1, fieldY, rowX + fieldWidth - 1, fieldY + CONTROL);
 		float inputWidth = UiFont.width(input, TEXT_SIZE);
-		float textX = rowX + 6 - Math.max(0.0F, inputWidth - fieldWidth + 14);
+		float textX = rowX + 7 - Math.max(0.0F, inputWidth - fieldWidth + 16);
 		float centerY = fieldY + CONTROL / 2.0F;
 		UiFont.draw(graphics, input.isEmpty() ? "Никнейм" : input, textX, centerY, TEXT_SIZE, Ui.fade(input.isEmpty() ? MUTED : TEXT_ACTIVE, appear));
 		if (Util.getMillis() / 500 % 2 == 0) {
-			Ui.rect(graphics, textX + inputWidth + 0.5F, centerY - 4.0F, 0.5F, 8.0F, 0.0F, Ui.fade(TEXT_ACTIVE, appear));
+			Ui.rect(graphics, textX + inputWidth + 0.5F, centerY - 4.5F, 0.5F, 9.0F, 0.0F, Ui.fade(TEXT_ACTIVE, appear));
 		}
 		Ui.unclip(graphics);
-
 		int confirmX = confirmX();
-		Ui.rect(graphics, confirmX, fieldY, CONTROL, CONTROL, 6.0F, Ui.fade(valid ? CONFIRM : BUTTON, appear));
+		Ui.rect(graphics, confirmX, fieldY, CONTROL, CONTROL, 7.0F, Ui.fade(valid ? CONFIRM : BUTTON, appear));
 		UiFont.drawCentered(graphics, "✓", confirmX + CONTROL / 2.0F, centerY, TEXT_SIZE, Ui.fade(valid ? CONFIRM_ICON : MUTED, appear));
-		int randomX = randomX();
-		Ui.rect(graphics, randomX, fieldY, RANDOM_WIDTH, CONTROL, 6.0F, Ui.fade(overRandom ? BUTTON_HOVER : BUTTON, appear));
-		UiFont.drawCentered(graphics, "Случайный", randomX + RANDOM_WIDTH / 2.0F, centerY, SMALL, Ui.fade(overRandom ? TEXT_ACTIVE : TEXT, appear));
 
-		int clearX = (width - CLEAR_WIDTH) / 2;
-		Ui.glass(graphics, clearX, clearY, CLEAR_WIDTH, CONTROL, 8.0F, DANGER_TINT, overClear ? 0.16F : 0.09F, appear);
-		UiFont.drawCentered(graphics, "Удалить все", width / 2.0F, clearY + CONTROL / 2.0F, SMALL, Ui.fade(DANGER, appear));
+		int buttonWidth = buttonWidth();
+		float buttonCenter = buttonsY + CONTROL / 2.0F;
+		Ui.panel(graphics, x, buttonsY, buttonWidth, CONTROL, 8.0F, appear);
+		if (overRandom) {
+			Ui.rect(graphics, x, buttonsY, buttonWidth, CONTROL, 8.0F, Ui.fade(HOVER, appear));
+		}
+		UiFont.drawCentered(graphics, "Случайный", x + buttonWidth / 2.0F, buttonCenter, SMALL, Ui.fade(overRandom ? TEXT_ACTIVE : TEXT, appear));
+		int clearX = x + WIDTH - buttonWidth;
+		Ui.rect(graphics, clearX, buttonsY, buttonWidth, CONTROL, 8.0F, Ui.fade(overClear ? DANGER_HOVER : DANGER_BUTTON, appear));
+		UiFont.drawCentered(graphics, "Удалить все", clearX + buttonWidth / 2.0F, buttonCenter, SMALL, Ui.fade(DANGER, appear));
 	}
 
 	@Override
@@ -237,11 +238,11 @@ public final class ProfilesScreen extends BatonScreen {
 		listHeight = Math.min(rows.size(), VISIBLE_ROWS) * ROW;
 		cardHeight = PAD * 3 + listHeight + CONTROL;
 		x = (width - WIDTH) / 2;
-		titleY = (height - TITLE_HEIGHT - cardHeight - CLEAR_GAP - CONTROL) / 2;
+		titleY = (height - TITLE_HEIGHT - cardHeight - GAP - CONTROL) / 2;
 		cardY = titleY + TITLE_HEIGHT;
 		listY = cardY + PAD;
 		fieldY = listY + listHeight + PAD;
-		clearY = cardY + cardHeight + CLEAR_GAP;
+		buttonsY = cardY + cardHeight + GAP;
 		scrollTarget = Mth.clamp(scrollTarget, 0.0F, maxScroll());
 		scroll = Math.min(scroll, maxScroll());
 	}
@@ -250,16 +251,12 @@ public final class ProfilesScreen extends BatonScreen {
 		return Math.max(0, rows.size() * ROW - listHeight);
 	}
 
-	private int fieldWidth() {
-		return WIDTH - PAD * 2 - CONTROL - RANDOM_WIDTH - 6;
-	}
-
 	private int confirmX() {
-		return x + PAD + fieldWidth() + 2;
+		return x + WIDTH - PAD - CONTROL;
 	}
 
-	private int randomX() {
-		return x + WIDTH - PAD - RANDOM_WIDTH;
+	private int buttonWidth() {
+		return (WIDTH - GAP) / 2;
 	}
 
 	private int hoveredRow(double mouseX, double mouseY) {
@@ -279,11 +276,11 @@ public final class ProfilesScreen extends BatonScreen {
 	}
 
 	private boolean overRandom(double mouseX, double mouseY) {
-		return inside(mouseX, mouseY, randomX(), fieldY, RANDOM_WIDTH, CONTROL);
+		return inside(mouseX, mouseY, x, buttonsY, buttonWidth(), CONTROL);
 	}
 
 	private boolean overClear(double mouseX, double mouseY) {
-		return inside(mouseX, mouseY, (width - CLEAR_WIDTH) / 2.0F, clearY, CLEAR_WIDTH, CONTROL);
+		return inside(mouseX, mouseY, x + WIDTH - buttonWidth(), buttonsY, buttonWidth(), CONTROL);
 	}
 
 	private static String plural(int count) {

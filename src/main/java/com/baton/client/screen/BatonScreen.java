@@ -1,6 +1,5 @@
 package com.baton.client.screen;
 
-import com.baton.client.render.Ui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -10,8 +9,10 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
 
 public abstract class BatonScreen extends Screen {
-	private static final float INTRO_SECONDS = 0.45F;
-	private static final float INTRO_OFFSET = 8.0F;
+	private static final int BACKGROUND = 0xFF0B0C0F;
+	private static final float INTRO_SECONDS = 0.26F;
+	private static final float INTRO_SCALE = 0.9F;
+	private static final float OVERSHOOT = 1.70158F;
 
 	private final long openedAt = Util.getMillis();
 	private long lastFrame = openedAt;
@@ -25,7 +26,7 @@ public abstract class BatonScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-		Ui.snow(graphics, width, height);
+		graphics.fill(0, 0, width, height, BACKGROUND);
 	}
 
 	@Override
@@ -33,10 +34,15 @@ public abstract class BatonScreen extends Screen {
 		long now = Util.getMillis();
 		delta = Math.min((now - lastFrame) / 1000.0F, 0.1F);
 		lastFrame = now;
-		float progress = 1.0F - Math.min((now - openedAt) / 1000.0F / INTRO_SECONDS, 1.0F);
-		float appear = 1.0F - progress * progress * progress;
+		float progress = Math.min((now - openedAt) / 1000.0F / INTRO_SECONDS, 1.0F);
+		float inverse = 1.0F - progress;
+		float appear = 1.0F - inverse * inverse * inverse;
+		float t = progress - 1.0F;
+		float scale = INTRO_SCALE + (1.0F - INTRO_SCALE) * (1.0F + (OVERSHOOT + 1.0F) * t * t * t + OVERSHOOT * t * t);
 		graphics.pose().pushMatrix();
-		graphics.pose().translate(0.0F, (1.0F - appear) * INTRO_OFFSET);
+		graphics.pose().translate(width / 2.0F, height / 2.0F);
+		graphics.pose().scale(scale);
+		graphics.pose().translate(-width / 2.0F, -height / 2.0F);
 		renderContent(graphics, mouseX, mouseY, appear);
 		graphics.pose().popMatrix();
 	}

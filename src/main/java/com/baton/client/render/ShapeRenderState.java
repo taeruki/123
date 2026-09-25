@@ -17,21 +17,21 @@ public record ShapeRenderState(
 	float width,
 	float height,
 	float padding,
-	float z,
 	int color,
-	int a,
-	int b,
+	int radius,
+	int stroke,
 	@Nullable ScreenRectangle scissorArea,
 	@Nullable ScreenRectangle bounds
 ) implements GuiElementRenderState {
-	static ShapeRenderState of(RenderPipeline pipeline, Matrix3x2fc pose, float x, float y, float width, float height, float padding, float z, int color, int a, int b) {
+	static ShapeRenderState of(RenderPipeline pipeline, Matrix3x2fc pose, float x, float y, float width, float height, int color, int radius, int stroke) {
+		float padding = 1.0F + Math.max(-stroke, 0) / 8.0F;
 		ScreenRectangle area = new ScreenRectangle(
 			Mth.floor(x - padding),
 			Mth.floor(y - padding),
 			Mth.ceil(width + padding * 2) + 1,
 			Mth.ceil(height + padding * 2) + 1
 		).transformMaxBounds(pose);
-		return new ShapeRenderState(pipeline, pose, x, y, width, height, padding, z, color, a, b, Ui.scissor(), Ui.bounds(area));
+		return new ShapeRenderState(pipeline, pose, x, y, width, height, padding, color, radius, stroke, Ui.scissor(), Ui.bounds(area));
 	}
 
 	@Override
@@ -47,12 +47,7 @@ public record ShapeRenderState(
 	}
 
 	private void vertex(VertexConsumer consumer, float centerX, float centerY, float localX, float localY) {
-		float px = centerX + localX;
-		float py = centerY + localY;
-		consumer.addVertex(pose.m00() * px + pose.m10() * py + pose.m20(), pose.m01() * px + pose.m11() * py + pose.m21(), z)
-			.setColor(color)
-			.setUv(localX, localY)
-			.setUv2(a, b);
+		consumer.addVertexWith2DPose(pose, centerX + localX, centerY + localY).setColor(color).setUv(localX, localY).setUv2(radius, stroke);
 	}
 
 	@Override

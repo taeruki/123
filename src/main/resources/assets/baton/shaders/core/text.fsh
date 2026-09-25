@@ -11,8 +11,8 @@ out vec4 fragColor;
 
 void main() {
     float dist = texture(Sampler0, texCoord0).r;
-    float edge = max(fwidth(dist) * 0.5, 1e-4);
-    float alpha = vertexColor.a * smoothstep(0.5 - edge, 0.5 + edge, dist);
+    float pixel = max(length(vec2(dFdx(dist), dFdy(dist))), 1e-4);
+    float alpha = vertexColor.a * clamp((dist - 0.5) / pixel + 0.5, 0.0, 1.0);
     if (alpha <= 0.0) {
         discard;
     }

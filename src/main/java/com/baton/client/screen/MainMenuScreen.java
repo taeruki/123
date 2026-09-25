@@ -21,9 +21,9 @@ public final class MainMenuScreen extends BatonScreen {
 	private static final int ROW = 26;
 	private static final int INSET = 3;
 	private static final int GAP = 8;
-	private static final int EXIT_WIDTH = 46;
-	private static final int EXIT_HEIGHT = 16;
-	private static final int KNOB = 12;
+	private static final int EXIT_WIDTH = 58;
+	private static final int EXIT_HEIGHT = 20;
+	private static final int KNOB = 16;
 	private static final float QUIT_THRESHOLD = 0.97F;
 	private static final float LABEL = 8.5F;
 	private static final int HIGHLIGHT = 0x0FFFFFFF;
@@ -79,7 +79,7 @@ public final class MainMenuScreen extends BatonScreen {
 		int tint = ARGB.colorFromFloat(appear, appear, appear, appear);
 		graphics.blit(RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA, LOGO, (width - LOGO_SIZE) / 2, logoY, 0, 0, LOGO_SIZE, LOGO_SIZE, LOGO_TEXTURE, LOGO_TEXTURE, LOGO_TEXTURE, LOGO_TEXTURE, tint);
 
-		Ui.glass(graphics, menuX, menuY, MENU_WIDTH, menuHeight(), 11.0F, appear);
+		Ui.panel(graphics, menuX, menuY, MENU_WIDTH, menuHeight(), 11.0F, appear);
 		float highlight = appear * highlightAlpha;
 		Ui.rect(graphics, menuX + INSET, highlightY, MENU_WIDTH - INSET * 2, ROW, 8.0F, Ui.fade(HIGHLIGHT, highlight));
 		Ui.rect(graphics, width / 2.0F - 4.0F, highlightY + ROW - 3.0F, 8.0F, 1.0F, 0.5F, Ui.fade(UNDERLINE, highlight));
@@ -90,11 +90,11 @@ public final class MainMenuScreen extends BatonScreen {
 
 		float radius = EXIT_HEIGHT / 2.0F;
 		float knobX = knobX();
-		Ui.glass(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, radius, appear);
+		Ui.panel(graphics, exitX, exitY, EXIT_WIDTH, EXIT_HEIGHT, radius, appear);
 		Ui.rect(graphics, exitX + 2, exitY + 2, knobX - exitX - 2 + KNOB, KNOB, KNOB / 2.0F, Ui.fade(TRAIL, appear));
 		float armed = Mth.clamp((knob - 0.75F) / (QUIT_THRESHOLD - 0.75F), 0.0F, 1.0F);
 		Ui.rect(graphics, knobX, exitY + 2, KNOB, KNOB, KNOB / 2.0F, Ui.fade(ARGB.srgbLerp(armed, KNOB_COLOR, KNOB_ARMED), appear));
-		UiFont.drawCentered(graphics, "→", knobX + KNOB / 2.0F, exitY + radius, 6.0F, Ui.fade(KNOB_ICON, appear));
+		UiFont.drawCentered(graphics, "→", knobX + KNOB / 2.0F, exitY + radius, 8.0F, Ui.fade(KNOB_ICON, appear));
 	}
 
 	@Override
