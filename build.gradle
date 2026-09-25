@@ -33,7 +33,6 @@ dependencies {
 	runtimeMods "maven.modrinth:ferrite-core:${project.ferritecore_version}"
 	runtimeMods "maven.modrinth:immediatelyfast:${project.immediatelyfast_version}"
 	runtimeMods "maven.modrinth:entityculling:${project.entityculling_version}"
-	runtimeMods "maven.modrinth:modernfix:${project.modernfix_version}"
 }
 
 def syncRuntimeMods = tasks.register('syncRuntimeMods', Sync) {
