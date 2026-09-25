@@ -68,6 +68,7 @@ public final class WorldsScreen extends CardScreen {
 	@Override
 	protected void setup() {
 		action("Играть", Kind.PRIMARY, () -> playable(list.selected()), () -> join(list.selected()));
+		row();
 		action("Создать", Kind.NORMAL, () -> true, () -> CreateWorldScreen.openFresh(minecraft, () -> minecraft.setScreen(this)));
 		action("Удалить", Kind.DANGER, () -> list.selected() != null && list.selected().canDelete(), () -> delete(list.selected()));
 		load();

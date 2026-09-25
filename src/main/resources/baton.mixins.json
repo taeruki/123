@@ -12,6 +12,7 @@
 		"ClientPackSourceMixin",
 		"ConnectionMixin",
 		"EditBoxMixin",
+		"HeaderAndFooterLayoutMixin",
 		"MinecraftMixin",
 		"OptionsMixin",
 		"OptionsScreenMixin",

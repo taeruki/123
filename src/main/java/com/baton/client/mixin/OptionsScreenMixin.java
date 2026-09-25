@@ -29,10 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(OptionsScreen.class)
 public abstract class OptionsScreenMixin extends Screen {
 	private static final int HEADER_HEIGHT = 40;
-
-	@Shadow
-	@Final
-	private static Component TITLE;
+	private static final Component HEADING = Component.literal("Параметры");
 
 	@Shadow
 	@Final
@@ -67,7 +64,7 @@ public abstract class OptionsScreenMixin extends Screen {
 	@Inject(method = "init", at = @At("HEAD"), cancellable = true)
 	private void baton$init(CallbackInfo ci) {
 		layout.setHeaderHeight(HEADER_HEIGHT);
-		layout.addTitleHeader(TITLE, font);
+		layout.addTitleHeader(HEADING, font);
 		GridLayout grid = new GridLayout();
 		grid.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
 		GridLayout.RowHelper rows = grid.createRowHelper(2);

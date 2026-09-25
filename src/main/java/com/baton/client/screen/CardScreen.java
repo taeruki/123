@@ -18,18 +18,15 @@ public abstract class CardScreen extends BatonScreen {
 	private static final int HEADER = 32;
 	private static final int GAP = 6;
 	private static final long CONFIRM_MILLIS = 2500L;
-	private static final float TITLE = 12.0F;
 	private static final float SMALL = 7.5F;
-	private static final int TITLE_COLOR = 0xFFECEEF3;
 	private static final int ACCENT_HOVER = 0xFFD8DCE4;
 
 	protected final Screen parent;
 	private final int cardWidth;
-	private final List<Action> actions = new ArrayList<>();
+	private final List<List<Action>> rows = new ArrayList<>();
 	private int cardX;
 	private int cardY;
 	private int headerY;
-	private int actionsY;
 	@Nullable
 	private Action armed;
 	private long armedAt;
@@ -52,18 +49,34 @@ public abstract class CardScreen extends BatonScreen {
 	protected abstract boolean clickBody(double mouseX, double mouseY, boolean doubleClick);
 
 	protected final void action(String label, Kind kind, BooleanSupplier enabled, Runnable run) {
-		actions.add(new Action(label, kind, enabled, run));
+		if (rows.isEmpty()) {
+			row();
+		}
+		rows.getLast().add(new Action(label, kind, enabled, run));
+	}
+
+	protected final void row() {
+		rows.add(new ArrayList<>());
 	}
 
 	@Override
 	protected final void init() {
-		actions.clear();
+		rows.clear();
 		setup();
 		int cardHeight = bodyHeight() + PAD * 2;
+		int actionsHeight = rows.size() * (CONTROL + GAP);
 		cardX = (width - cardWidth) / 2;
-		headerY = (height - HEADER - cardHeight - GAP - CONTROL) / 2;
+		headerY = (height - HEADER - cardHeight - actionsHeight) / 2;
 		cardY = headerY + HEADER;
-		actionsY = cardY + cardHeight + GAP;
+		int y = cardY + cardHeight + GAP;
+		for (List<Action> row : rows) {
+			int actionWidth = (cardWidth - GAP * (row.size() - 1)) / row.size();
+			for (int i = 0; i < row.size(); i++) {
+				int x = cardX + i * (actionWidth + GAP);
+				row.get(i).place(x, y, i == row.size() - 1 ? cardX + cardWidth - x : actionWidth);
+			}
+			y += CONTROL + GAP;
+		}
 	}
 
 	@Override
@@ -71,40 +84,14 @@ public abstract class CardScreen extends BatonScreen {
 		if (armed != null && Util.getMillis() - armedAt > CONFIRM_MILLIS) {
 			armed = null;
 		}
-		UiFont.drawCentered(graphics, heading(), width / 2.0F, headerY + 6, TITLE, Ui.fade(TITLE_COLOR, appear));
+		UiFont.drawCentered(graphics, heading(), width / 2.0F, headerY + 6, Ui.HEADING_SIZE, Ui.fade(Ui.HEADING, appear));
 		UiFont.drawCentered(graphics, subtitle(), width / 2.0F, headerY + 20, SMALL, Ui.fade(Ui.TEXT, appear));
 		Ui.panel(graphics, cardX, cardY, cardWidth, bodyHeight() + PAD * 2, 10.0F, appear);
 		renderBody(graphics, cardX + PAD, cardY + PAD, cardWidth - PAD * 2, mouseX, mouseY, appear);
-
-		int actionWidth = actionWidth();
-		for (int i = 0; i < actions.size(); i++) {
-			Action action = actions.get(i);
-			int x = cardX + i * (actionWidth + GAP);
-			boolean enabled = action.enabled.getAsBoolean();
-			boolean hovered = enabled && inside(mouseX, mouseY, x, actionsY, actionWidth, CONTROL);
-			if (hovered) {
-				graphics.requestCursor(CursorTypes.POINTING_HAND);
+		for (List<Action> row : rows) {
+			for (Action action : row) {
+				renderAction(graphics, action, mouseX, mouseY, appear);
 			}
-			int text = switch (action.kind) {
-				case NORMAL -> {
-					Ui.control(graphics, x, actionsY, actionWidth, CONTROL, hovered, enabled, appear);
-					yield enabled ? Ui.TEXT_ACTIVE : Ui.MUTED;
-				}
-				case PRIMARY -> {
-					if (enabled) {
-						Ui.rect(graphics, x, actionsY, actionWidth, CONTROL, 7.0F, Ui.fade(hovered ? ACCENT_HOVER : Ui.ACCENT, appear));
-						yield Ui.ON_ACCENT;
-					}
-					Ui.control(graphics, x, actionsY, actionWidth, CONTROL, false, false, appear);
-					yield Ui.MUTED;
-				}
-				case DANGER -> {
-					Ui.rect(graphics, x, actionsY, actionWidth, CONTROL, 7.0F, Ui.fade(hovered || action == armed ? Ui.DANGER_HOVER : Ui.DANGER_FILL, enabled ? appear : appear * 0.5F));
-					yield enabled ? Ui.DANGER : Ui.MUTED;
-				}
-			};
-			String label = action == armed ? "Точно?" : action.label;
-			UiFont.drawCentered(graphics, label, x + actionWidth / 2.0F, actionsY + CONTROL / 2.0F, SMALL, Ui.fade(text, appear));
 		}
 	}
 
@@ -113,19 +100,19 @@ public abstract class CardScreen extends BatonScreen {
 		if (event.button() != 0) {
 			return super.mouseClicked(event, doubleClick);
 		}
-		int actionWidth = actionWidth();
-		for (int i = 0; i < actions.size(); i++) {
-			Action action = actions.get(i);
-			if (inside(event.x(), event.y(), cardX + i * (actionWidth + GAP), actionsY, actionWidth, CONTROL) && action.enabled.getAsBoolean()) {
-				click();
-				if (action.kind == Kind.DANGER && action != armed) {
-					armed = action;
-					armedAt = Util.getMillis();
-				} else {
-					armed = null;
-					action.run.run();
+		for (List<Action> row : rows) {
+			for (Action action : row) {
+				if (action.contains(event.x(), event.y()) && action.enabled.getAsBoolean()) {
+					click();
+					if (action.kind == Kind.DANGER && action != armed) {
+						armed = action;
+						armedAt = Util.getMillis();
+					} else {
+						armed = null;
+						action.run.run();
+					}
+					return true;
 				}
-				return true;
 			}
 		}
 		return clickBody(event.x(), event.y(), doubleClick) || super.mouseClicked(event, doubleClick);
@@ -143,8 +130,34 @@ public abstract class CardScreen extends BatonScreen {
 		return count + " " + word;
 	}
 
-	private int actionWidth() {
-		return actions.isEmpty() ? 0 : (cardWidth - GAP * (actions.size() - 1)) / actions.size();
+	private void renderAction(GuiGraphics graphics, Action action, int mouseX, int mouseY, float appear) {
+		boolean enabled = action.enabled.getAsBoolean();
+		boolean hovered = enabled && action.contains(mouseX, mouseY);
+		if (hovered) {
+			graphics.requestCursor(CursorTypes.POINTING_HAND);
+		}
+		int x = action.x;
+		int y = action.y;
+		int width = action.width;
+		int text = switch (action.kind) {
+			case NORMAL -> {
+				Ui.control(graphics, x, y, width, CONTROL, hovered, enabled, appear);
+				yield enabled ? Ui.TEXT_ACTIVE : Ui.MUTED;
+			}
+			case PRIMARY -> {
+				if (enabled) {
+					Ui.rect(graphics, x, y, width, CONTROL, 7.0F, Ui.fade(hovered ? ACCENT_HOVER : Ui.ACCENT, appear));
+					yield Ui.ON_ACCENT;
+				}
+				Ui.control(graphics, x, y, width, CONTROL, false, false, appear);
+				yield Ui.MUTED;
+			}
+			case DANGER -> {
+				Ui.rect(graphics, x, y, width, CONTROL, 7.0F, Ui.fade(hovered || action == armed ? Ui.DANGER_HOVER : Ui.DANGER_FILL, enabled ? appear : appear * 0.5F));
+				yield enabled ? Ui.DANGER : Ui.MUTED;
+			}
+		};
+		UiFont.drawCentered(graphics, action == armed ? "Точно?" : action.label, x + width / 2.0F, y + CONTROL / 2.0F, SMALL, Ui.fade(text, appear));
 	}
 
 	protected enum Kind {
@@ -153,6 +166,30 @@ public abstract class CardScreen extends BatonScreen {
 		DANGER
 	}
 
-	private record Action(String label, Kind kind, BooleanSupplier enabled, Runnable run) {
+	private static final class Action {
+		private final String label;
+		private final Kind kind;
+		private final BooleanSupplier enabled;
+		private final Runnable run;
+		private int x;
+		private int y;
+		private int width;
+
+		private Action(String label, Kind kind, BooleanSupplier enabled, Runnable run) {
+			this.label = label;
+			this.kind = kind;
+			this.enabled = enabled;
+			this.run = run;
+		}
+
+		private void place(int x, int y, int width) {
+			this.x = x;
+			this.y = y;
+			this.width = width;
+		}
+
+		private boolean contains(double mouseX, double mouseY) {
+			return inside(mouseX, mouseY, x, y, width, CONTROL);
+		}
 	}
 }

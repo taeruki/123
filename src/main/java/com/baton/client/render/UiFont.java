@@ -91,6 +91,16 @@ public final class UiFont {
 		return text.substring(0, end) + "…";
 	}
 
+	public static String printable(String text) {
+		Atlas font = atlas.join();
+		StringBuilder builder = new StringBuilder(text.length());
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			builder.append(font.glyphs().containsKey(c) ? c : ' ');
+		}
+		return builder.toString().replaceAll("\\s+", " ").trim();
+	}
+
 	public static void draw(GuiGraphics graphics, String text, float x, float centerY, float size, int color) {
 		draw(graphics.guiRenderState, graphics.pose(), graphics.scissorStack.peek(), text, x, centerY, size, color);
 	}

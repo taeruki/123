@@ -72,7 +72,7 @@ public final class ProxyScreen extends CardScreen {
 			int segmentX = x + i * segment;
 			boolean selected = TYPES[i] == type;
 			boolean hovered = inside(mouseX, mouseY, segmentX, y, segment, CONTROL);
-			if (hovered && !selected) {
+			if (hovered) {
 				graphics.requestCursor(CursorTypes.POINTING_HAND);
 			}
 			if (selected || hovered) {
@@ -80,10 +80,10 @@ public final class ProxyScreen extends CardScreen {
 			}
 			UiFont.drawCentered(graphics, TYPES[i].label(), segmentX + segment / 2.0F, y + CONTROL / 2.0F, SMALL, Ui.fade(selected ? Ui.TEXT_ACTIVE : Ui.TEXT, appear));
 		}
-		address.render(graphics, x, fieldY(1), width, CONTROL, appear);
+		address.render(graphics, x, fieldY(1), width, CONTROL, mouseX, mouseY, appear);
 		int half = (width - PAD) / 2;
-		username.render(graphics, x, fieldY(2), half, CONTROL, appear);
-		password.render(graphics, x + width - half, fieldY(2), half, CONTROL, appear);
+		username.render(graphics, x, fieldY(2), half, CONTROL, mouseX, mouseY, appear);
+		password.render(graphics, x + width - half, fieldY(2), half, CONTROL, mouseX, mouseY, appear);
 	}
 
 	@Override

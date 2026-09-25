@@ -54,8 +54,8 @@ public final class ServerFormScreen extends CardScreen {
 		fieldX = x;
 		fieldY = y;
 		fieldWidth = width;
-		name.render(graphics, x, y, width, CONTROL, appear);
-		address.render(graphics, x, y + CONTROL + PAD, width, CONTROL, appear);
+		name.render(graphics, x, y, width, CONTROL, mouseX, mouseY, appear);
+		address.render(graphics, x, y + CONTROL + PAD, width, CONTROL, mouseX, mouseY, appear);
 	}
 
 	@Override

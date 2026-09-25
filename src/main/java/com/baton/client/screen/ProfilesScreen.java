@@ -71,7 +71,7 @@ public final class ProfilesScreen extends CardScreen {
 		fieldY = y + list.height() + PAD;
 		confirmX = x + width - CONTROL;
 		removeX = x + width - REMOVE;
-		field.render(graphics, x, fieldY, width - CONTROL - 3, CONTROL, appear);
+		field.render(graphics, x, fieldY, width - CONTROL - 3, CONTROL, mouseX, mouseY, appear);
 		boolean valid = Profiles.valid(field.value());
 		if (valid && inside(mouseX, mouseY, confirmX, fieldY, CONTROL, CONTROL) || list.hovered(mouseX, mouseY) != null) {
 			graphics.requestCursor(CursorTypes.POINTING_HAND);

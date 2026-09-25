@@ -13,6 +13,8 @@ import org.joml.Matrix3x2f;
 
 public final class Ui {
 	public static final String MOD_ID = "baton";
+	public static final float HEADING_SIZE = 12.0F;
+	public static final int HEADING = 0xFFECEEF3;
 	public static final int BACKGROUND = 0xFF0B0C0F;
 	public static final int PANEL = 0xFF121318;
 	public static final int EDGE = 0x12FFFFFF;

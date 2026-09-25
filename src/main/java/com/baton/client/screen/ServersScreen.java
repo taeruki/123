@@ -80,6 +80,7 @@ public final class ServersScreen extends CardScreen {
 	@Override
 	protected void setup() {
 		action("Играть", Kind.PRIMARY, () -> list.selected() != null, () -> join(list.selected()));
+		row();
 		action("Добавить", Kind.NORMAL, () -> true, () -> minecraft.setScreen(new ServerFormScreen(this, "", "", (name, ip) -> {
 			servers.add(new ServerData(name, ip, ServerData.Type.OTHER), false);
 			servers.save();
@@ -221,9 +222,10 @@ public final class ServersScreen extends CardScreen {
 
 		float textX = x + ICON + 11;
 		float textWidth = width - ICON - 15 - STATUS_WIDTH;
-		String motd = ChatFormatting.stripFormatting(data.motd == null ? "" : data.motd.getString());
+		String motd = data.motd == null ? "" : ChatFormatting.stripFormatting(data.motd.getString()).lines().findFirst().orElse("");
+		String detail = UiFont.printable(motd);
 		UiFont.draw(graphics, UiFont.ellipsize(data.name, NAME, textWidth), textX, 9.0F, NAME, Ui.fade(selected || hovered ? Ui.TEXT_ACTIVE : Ui.TEXT, alpha));
-		UiFont.draw(graphics, UiFont.ellipsize(motd.lines().findFirst().orElse(data.ip).trim(), DETAIL, textWidth), textX, 18.5F, DETAIL, Ui.fade(Ui.MUTED, alpha));
+		UiFont.draw(graphics, UiFont.ellipsize(detail.isEmpty() ? data.ip : detail, DETAIL, textWidth), textX, 18.5F, DETAIL, Ui.fade(Ui.MUTED, alpha));
 
 		float right = x + width - 6;
 		switch (data.state()) {

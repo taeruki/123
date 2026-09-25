@@ -3,6 +3,7 @@ package com.baton.client.screen.component;
 import com.baton.client.render.Ui;
 import com.baton.client.render.UiFont;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import java.util.function.IntPredicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -50,7 +51,10 @@ public final class TextField {
 		this.focused = focused;
 	}
 
-	public void render(GuiGraphics graphics, int x, int y, int width, int height, float alpha) {
+	public void render(GuiGraphics graphics, int x, int y, int width, int height, int mouseX, int mouseY, float alpha) {
+		if (mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height) {
+			graphics.requestCursor(CursorTypes.IBEAM);
+		}
 		Ui.rect(graphics, x, y, width, height, 7.0F, Ui.fade(Ui.FIELD, alpha));
 		Ui.outline(graphics, x, y, width, height, 7.0F, 0.5F, Ui.fade(focused ? EDGE_FOCUSED : Ui.EDGE, alpha));
 		graphics.enableScissor(x + 1, y, x + width - 1, y + height);
