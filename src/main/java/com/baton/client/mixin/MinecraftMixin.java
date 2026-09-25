@@ -1,6 +1,7 @@
 package com.baton.client.mixin;
 
 import com.baton.client.profile.Profiles;
+import com.baton.client.proxy.Proxies;
 import com.baton.client.render.UiFont;
 import com.baton.client.screen.MainMenuScreen;
 import com.baton.client.screen.ServersScreen;
@@ -32,8 +33,10 @@ public abstract class MinecraftMixin {
 
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void baton$load(GameConfig config, CallbackInfo ci) {
+		Minecraft minecraft = (Minecraft) (Object) this;
 		UiFont.load();
-		Profiles.load((Minecraft) (Object) this);
+		Profiles.load(minecraft);
+		Proxies.load(minecraft.gameDirectory.toPath().resolve("baton"));
 	}
 
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)

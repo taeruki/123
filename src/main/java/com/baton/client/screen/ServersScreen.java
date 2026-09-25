@@ -1,5 +1,6 @@
 package com.baton.client.screen;
 
+import com.baton.client.proxy.Proxies;
 import com.baton.client.render.Ui;
 import com.baton.client.render.UiFont;
 import com.baton.client.screen.component.ScrollList;
@@ -21,6 +22,7 @@ import net.minecraft.client.gui.screens.FaviconTexture;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.ServerStatusPinger;
@@ -39,6 +41,9 @@ public final class ServersScreen extends CardScreen {
 	private static final int ICON = 18;
 	private static final int ICON_TEXTURE = 64;
 	private static final int STATUS_WIDTH = 44;
+	private static final int PROXY_WIDTH = 58;
+	private static final int PROXY_HEIGHT = 18;
+	private static final int PROXY_MARGIN = 10;
 	private static final float NAME = 8.5F;
 	private static final float DETAIL = 6.5F;
 	private static final int PING_GOOD = 0xFF7BD88F;
@@ -63,7 +68,8 @@ public final class ServersScreen extends CardScreen {
 
 	@Override
 	protected String subtitle() {
-		return plural(servers.size(), "сервер", "сервера", "серверов");
+		String count = plural(servers.size(), "сервер", "сервера", "серверов");
+		return Proxies.settings().enabled() ? count + "  ·  через прокси" : count;
 	}
 
 	@Override
@@ -144,13 +150,35 @@ public final class ServersScreen extends CardScreen {
 		icons.clear();
 	}
 
+	@Override
+	protected void renderContent(GuiGraphics graphics, int mouseX, int mouseY, float appear) {
+		super.renderContent(graphics, mouseX, mouseY, appear);
+		int x = width - PROXY_MARGIN - PROXY_WIDTH;
+		boolean hovered = overProxy(mouseX, mouseY);
+		if (hovered) {
+			graphics.requestCursor(CursorTypes.POINTING_HAND);
+		}
+		Ui.control(graphics, x, PROXY_MARGIN, PROXY_WIDTH, PROXY_HEIGHT, hovered, true, appear);
+		boolean enabled = Proxies.settings().enabled();
+		Ui.rect(graphics, x + 9.0F, PROXY_MARGIN + PROXY_HEIGHT / 2.0F - 2.0F, 4.0F, 4.0F, 2.0F, Ui.fade(enabled ? PING_GOOD : Ui.MUTED, appear));
+		UiFont.drawCentered(graphics, "Proxy", x + PROXY_WIDTH / 2.0F + 5.0F, PROXY_MARGIN + PROXY_HEIGHT / 2.0F, 7.5F, Ui.fade(hovered || enabled ? Ui.TEXT_ACTIVE : Ui.TEXT, appear));
+	}
+
+	@Override
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		if (event.button() == 0 && overProxy(event.x(), event.y())) {
+			click();
+			minecraft.setScreen(new ProxyScreen(this));
+			return true;
+		}
+		return super.mouseClicked(event, doubleClick);
+	}
+
 	private void refresh() {
 		List<ServerData> entries = new ArrayList<>(servers.size());
 		for (int i = 0; i < servers.size(); i++) {
 			ServerData data = servers.get(i);
-			if (data.state() == ServerData.State.PINGING) {
-				data.setState(ServerData.State.INITIAL);
-			}
+			data.setState(ServerData.State.INITIAL);
 			entries.add(data);
 		}
 		list.set(entries);
@@ -160,6 +188,10 @@ public final class ServersScreen extends CardScreen {
 		if (data != null) {
 			ConnectScreen.startConnecting(this, minecraft, ServerAddress.parseString(data.ip), data, false, null);
 		}
+	}
+
+	private boolean overProxy(double mouseX, double mouseY) {
+		return inside(mouseX, mouseY, width - PROXY_MARGIN - PROXY_WIDTH, PROXY_MARGIN, PROXY_WIDTH, PROXY_HEIGHT);
 	}
 
 	private void ping(ServerData data) {

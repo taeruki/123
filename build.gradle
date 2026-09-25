@@ -30,6 +30,9 @@ dependencies {
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
+	include(implementation("io.netty:netty-handler-proxy:${project.netty_version}"))
+	include(implementation("io.netty:netty-codec-socks:${project.netty_version}"))
+
 	modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	runtimeMods "maven.modrinth:sodium:${project.sodium_version}"

@@ -8,13 +8,17 @@
 		"AbstractSelectionListMixin",
 		"AbstractSliderButtonMixin",
 		"AbstractStringWidgetMixin",
+		"CheckboxMixin",
 		"ClientPackSourceMixin",
+		"ConnectionMixin",
 		"EditBoxMixin",
 		"MinecraftMixin",
 		"OptionsMixin",
 		"PackSelectionModelMixin",
 		"RenderingTextCollectorMixin",
-		"ScreenMixin"
+		"ScreenMixin",
+		"TabButtonMixin",
+		"TabNavigationBarMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

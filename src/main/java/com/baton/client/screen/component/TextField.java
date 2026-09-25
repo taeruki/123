@@ -19,11 +19,17 @@ public final class TextField {
 	private final IntPredicate allowed;
 	private String value = "";
 	private boolean focused;
+	private boolean secret;
 
 	public TextField(String hint, int maxLength, IntPredicate allowed) {
 		this.hint = hint;
 		this.maxLength = maxLength;
 		this.allowed = allowed;
+	}
+
+	public TextField secret() {
+		secret = true;
+		return this;
 	}
 
 	public String value() {
@@ -48,14 +54,26 @@ public final class TextField {
 		Ui.rect(graphics, x, y, width, height, 7.0F, Ui.fade(Ui.FIELD, alpha));
 		Ui.outline(graphics, x, y, width, height, 7.0F, 0.5F, Ui.fade(focused ? EDGE_FOCUSED : Ui.EDGE, alpha));
 		graphics.enableScissor(x + 1, y, x + width - 1, y + height);
-		float textWidth = UiFont.width(value, SIZE);
+		String shown = secret ? "•".repeat(value.length()) : value;
+		float textWidth = UiFont.width(shown, SIZE);
 		float textX = x + 7 - Math.max(0.0F, textWidth - width + 16);
 		float centerY = y + height / 2.0F;
-		UiFont.draw(graphics, value.isEmpty() ? hint : value, textX, centerY, SIZE, Ui.fade(value.isEmpty() ? Ui.MUTED : Ui.TEXT_ACTIVE, alpha));
+		UiFont.draw(graphics, value.isEmpty() ? hint : shown, textX, centerY, SIZE, Ui.fade(value.isEmpty() ? Ui.MUTED : Ui.TEXT_ACTIVE, alpha));
 		if (focused && Util.getMillis() / 500 % 2 == 0) {
 			Ui.rect(graphics, textX + textWidth + 0.5F, centerY - 4.5F, 0.5F, 9.0F, 0.0F, Ui.fade(Ui.TEXT_ACTIVE, alpha));
 		}
 		graphics.disableScissor();
+	}
+
+	public static void focusNext(TextField... fields) {
+		int current = -1;
+		for (int i = 0; i < fields.length; i++) {
+			if (fields[i].focused) {
+				current = i;
+			}
+			fields[i].focused = false;
+		}
+		fields[(current + 1) % fields.length].focused = true;
 	}
 
 	public boolean charTyped(CharacterEvent event) {

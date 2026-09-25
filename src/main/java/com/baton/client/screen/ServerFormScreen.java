@@ -77,8 +77,7 @@ public final class ServerFormScreen extends CardScreen {
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (event.isCycleFocus()) {
-			name.focused(!name.focused());
-			address.focused(!name.focused());
+			TextField.focusNext(name, address);
 			return true;
 		}
 		if (event.isConfirmation()) {
